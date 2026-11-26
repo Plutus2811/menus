@@ -207,14 +207,6 @@ textarea{min-height:100px;resize:vertical}
       <div id="shop"></div>
       <details id="pan"><summary id="pansum"></summary><p class="hint" style="margin:4px 0 8px">Ces ingrédients sont retirés de la liste tant qu'ils sont ici. Clique sur la maison d'un article pour l'y ajouter.</p><div class="lib" id="panl" style="margin:0"></div></details>
     </section>
-    <section class="panel" id="budp">
-      <div class="row"><h2 style="margin:0">Budget de la semaine</h2><span class="pill off" id="bweek"></span></div>
-      <div class="bud"><b id="btot"></b><span id="bsub"></span></div>
-      <div id="bbar"></div>
-      <div id="bry" style="margin-top:12px;display:grid;gap:6px"></div>
-      <div class="field" style="margin-top:8px"><span>Budget visé par semaine (€) <span class="hint">0 = pas d'objectif</span></span><input type="number" id="btarget" min="0" step="5"></div>
-      <p class="note" id="bnote"></p>
-    </section>
     </div>
     <div class="stackc">
       <section class="panel">
@@ -222,6 +214,14 @@ textarea{min-height:100px;resize:vertical}
         <p class="hint" style="margin:-6px 0 8px">Petit-déjeuners, goûters, produits du quotidien : ajoutés automatiquement à la liste de chaque semaine.</p>
         <div id="recl"></div>
         <form class="inrow" id="radd"><input type="text" id="rn" placeholder="Article (ex : céréales)" autocomplete="off" required><input type="text" id="rq" placeholder="Quantité (ex : 2 paquets)" autocomplete="off" style="flex:1 1 140px"><button class="btn" type="submit">Ajouter</button></form>
+      </section>
+      <section class="panel" id="budp">
+        <div class="row"><h2 style="margin:0">Budget de la semaine</h2><span class="pill off" id="bweek"></span></div>
+        <div class="bud"><b id="btot"></b><span id="bsub"></span></div>
+        <div id="bbar"></div>
+        <div id="bry" style="margin-top:12px;display:grid;gap:6px"></div>
+        <div class="field" style="margin-top:8px"><span>Budget visé par semaine (€) <span class="hint">0 = pas d'objectif</span></span><input type="number" id="btarget" min="0" step="5"></div>
+        <p class="note" id="bnote"></p>
       </section>
       <section class="panel">
         <h2>Apports nutritionnels</h2>
