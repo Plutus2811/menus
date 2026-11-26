@@ -169,6 +169,12 @@ textarea{min-height:100px;resize:vertical}
 .list .pr:hover{background:var(--wash);color:var(--ink)}.list .pr:focus-visible{outline:3px solid var(--tomato-ink)}.list .pr.no{color:var(--tomato-ink)}
 .brand{display:flex;align-items:center;gap:14px}.brand .logo{width:clamp(44px,5vw,58px);height:clamp(44px,5vw,58px);flex:none;color:var(--ink)}
 .h2i{width:28px;height:28px;color:var(--tomato-ink);flex:none}
+.logo .sp{transform-box:fill-box;transform-origin:50% 100%}
+.logo.play .d{animation:dayon .4s ease-out both}
+.logo.play .sp{animation:spoonpop .5s ease-out .8s both}
+@keyframes dayon{from{opacity:.15}to{opacity:1}}
+@keyframes spoonpop{0%{transform:scale(1)}45%{transform:scale(1.2)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.logo.play .d,.logo.play .sp{animation:none}}
 .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:12px;font-weight:700;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.show{opacity:1}
 @media(max-width:1100px){.week{grid-template-columns:repeat(4,minmax(0,1fr))}}
@@ -180,7 +186,7 @@ textarea{min-height:100px;resize:vertical}
 <div class="band">
   <div class="top">
     <div>
-      <div class="brand"><svg class="logo" viewBox="0 0 120 120" aria-hidden="true"><g fill="currentColor"><rect x="14" y="44" width="8" height="48" rx="4"/><rect x="27" y="44" width="8" height="48" rx="4"/><rect x="40" y="44" width="8" height="48" rx="4"/><rect x="72" y="44" width="8" height="48" rx="4"/><rect x="85" y="44" width="8" height="48" rx="4"/><rect x="98" y="44" width="8" height="48" rx="4"/></g><g fill="var(--tomato)"><ellipse cx="60" cy="38" rx="11" ry="15"/><rect x="56" y="48" width="8" height="44" rx="4"/></g></svg><h1>Menus de la semaine</h1></div>
+      <div class="brand"><svg class="logo" id="logo" viewBox="0 0 120 120" aria-hidden="true"><g fill="currentColor"><rect class="d" style="animation-delay:0.00s" x="14" y="44" width="8" height="48" rx="4"/><rect class="d" style="animation-delay:0.12s" x="27" y="44" width="8" height="48" rx="4"/><rect class="d" style="animation-delay:0.24s" x="40" y="44" width="8" height="48" rx="4"/><rect class="d" style="animation-delay:0.36s" x="72" y="44" width="8" height="48" rx="4"/><rect class="d" style="animation-delay:0.48s" x="85" y="44" width="8" height="48" rx="4"/><rect class="d" style="animation-delay:0.60s" x="98" y="44" width="8" height="48" rx="4"/></g><g class="sp" fill="var(--tomato)"><ellipse cx="60" cy="38" rx="11" ry="15"/><rect x="56" y="48" width="8" height="44" rx="4"/></g></svg><h1>Menus de la semaine</h1></div>
       <p class="sub"><span id="who"></span> <span class="pill off" id="hstat">Sur cet appareil</span></p>
     </div>
     <div class="actions">
@@ -833,6 +839,12 @@ function applyTheme(){const r=document.documentElement;if(TH==='auto')r.removeAt
   const b=$('theme');b.innerHTML=TH_ICON[TH]+'<span>'+TH_LAB[TH]+'</span>';b.setAttribute('aria-label','Thème : '+TH_LAB[TH]+'. Changer de thème')}
 $('theme').addEventListener('click',()=>{TH=TH_NEXT[TH];store.set('theme',TH);applyTheme();toast(TH==='auto'?'Thème automatique (suit l\'appareil)':TH==='clair'?'Mode jour':'Mode nuit')});
 applyTheme();
+
+/* ---------- logo animé « jour après jour » ---------- */
+function playLogo(){const l=$('logo');if(!l)return;l.classList.remove('play');void l.getBoundingClientRect();l.classList.add('play')}
+$('logo').addEventListener('mouseenter',playLogo);
+$('draw').addEventListener('click',playLogo);
+playLogo();
 
 /* ---------- synchronisation du foyer (Firebase Firestore) ---------- */
 const FB={apiKey:"AIzaSyB6m1o5K6plO-e2emzCIzXTpZq5QNsEOeY",authDomain:"menus-6235a.firebaseapp.com",projectId:"menus-6235a",storageBucket:"menus-6235a.firebasestorage.app",messagingSenderId:"576910682768",appId:"1:576910682768:web:f83cf963d2eff6d96c8615"};
