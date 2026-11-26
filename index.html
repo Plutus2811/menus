@@ -152,6 +152,9 @@ textarea{min-height:100px;resize:vertical}
 .rvd textarea{min-height:120px}
 @media(max-width:600px){.rvd .g3{grid-template-columns:minmax(0,1fr)}}
 .libc{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}.libc b{font-family:"Baloo 2",sans-serif;font-size:30px;line-height:1;color:var(--tomato-ink)}.libc>span:nth-child(2){font-weight:700;margin-right:6px}
+.who{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:99px;color:#fff;font:800 11px/1 Nunito,sans-serif;flex:none}
+.seg{display:flex;flex-wrap:wrap;gap:6px}.seg button{min-height:40px;padding:0 14px;border-radius:99px;border:1.5px solid var(--line);background:var(--card);font-weight:700;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:12px;font-weight:700;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.show{opacity:1}
 @media(max-width:1100px){.week{grid-template-columns:repeat(4,minmax(0,1fr))}}
@@ -220,6 +223,8 @@ textarea{min-height:100px;resize:vertical}
     <div class="stackc">
     <section class="panel">
       <div class="row" style="margin-bottom:8px"><h2 style="margin:0">Partage du foyer</h2><span class="pill off" id="sstat">Sur cet appareil</span></div>
+      <div style="margin-bottom:14px"><p style="margin:0 0 6px;font-weight:700">Sur cet appareil, je suis :</p><div class="seg" id="me" role="group" aria-label="Qui utilise cet appareil"></div>
+      <p class="hint" style="margin:6px 0 0">Les recettes que tu ajoutes ou importes depuis cet appareil portent ce prénom.</p></div>
       <div id="sbody"></div>
     </section>
     <section class="panel">
@@ -245,6 +250,7 @@ textarea{min-height:100px;resize:vertical}
     <section class="panel">
       <h2 style="margin-bottom:8px">Bibliothèque de menus</h2>
       <div class="libc" id="count" aria-live="polite"></div>
+      <div class="seg" id="libf" style="margin-top:12px" role="group" aria-label="Filtrer par auteur"></div>
       <div class="lib" id="lib"></div>
       <form id="add">
         <div class="two">
@@ -256,10 +262,11 @@ textarea{min-height:100px;resize:vertical}
       </form>
       <div class="imp">
         <h3 style="font-size:20px">Importer depuis un fichier .ods</h3>
-        <p class="hint" style="margin:4px 0 8px">Une ligne par ingrédient, quantités pour 1 adulte. Laisse « Plat » vide pour continuer le plat du dessus. Les colonnes nutritionnelles (pour 100 g) sont facultatives, comme Préparation (min), Cuisson (min), Lien, Étapes (séparées par « ; »), Saison (été / hiver), Favori (oui / éviter) et Restes (oui), à remplir sur la ligne du plat. Fonctionne aussi avec .xlsx et .csv.</p>
+        <p class="hint" style="margin:4px 0 8px">Une ligne par ingrédient, quantités pour 1 adulte. Laisse « Plat » vide pour continuer le plat du dessus. Les colonnes nutritionnelles (pour 100 g) sont facultatives, comme Préparation (min), Cuisson (min), Lien, Étapes (séparées par « ; »), Saison (été / hiver), Favori (oui / éviter), Restes (oui) et Auteur (David / Alex), à remplir sur la ligne du plat. Sans colonne Auteur, les recettes prennent le prénom choisi ci-dessous. Fonctionne aussi avec .xlsx et .csv.</p>
         <div class="scroll"><table class="ex"><tr><th>Plat</th><th>Type</th><th>Quantité</th><th>Unité</th><th>Ingrédient</th><th>Rayon</th><th>kcal</th><th>Protéines</th><th>Glucides</th><th>Lipides</th><th>g/pièce</th></tr>
         <tr><td>Lasagnes</td><td>viande</td><td>100</td><td>g</td><td>bœuf haché</td><td>Boucherie</td><td></td><td></td><td></td><td></td><td></td></tr>
         <tr><td></td><td></td><td>3</td><td>pièce</td><td>feuilles de lasagne</td><td>Épicerie</td><td>350</td><td>12</td><td>70</td><td>1.5</td><td>20</td></tr></table></div>
+        <div class="field" style="border:0;padding:4px 0"><span>Ces recettes sont de</span><select id="iown" style="min-height:44px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);padding:0 8px;font-size:16px"></select></div>
         <div class="radio"><label><input type="radio" name="mode" value="add" checked>Ajouter à ma bibliothèque</label><label><input type="radio" name="mode" value="replace">Remplacer ma bibliothèque</label></div>
         <label class="drop" id="drop"><input type="file" id="file" accept=".ods,.xlsx,.xls,.csv"><b>Choisir un fichier</b><br><span class="hint">ou le glisser ici</span></label>
         <button class="btn" id="tpl" type="button">Copier le modèle de colonnes</button>
@@ -347,7 +354,13 @@ function migrate(){let ch=false;lib.forEach(r=>{const m=/^d(\d+)$/.exec(r.id);co
 
 const store={get(k,d){try{const v=localStorage.getItem('menus2.'+k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem('menus2.'+k,JSON.stringify(v))}catch(e){}}};
 let lib=store.get('lib',DEF);
-let HOUSE=Object.assign({ry:{},pantry:[],recur:[{n:'lait',q:'4 l',ry:'cr'},{n:'céréales',q:'1 paquet',ry:'ep'},{n:'compotes',q:'12',ry:'ep'},{n:'biscuits pour le goûter',q:'2 paquets',ry:'ep'},{n:'fruits',q:'2 kg',ry:'fl'}]},store.get('house',{}));
+let ME=store.get('me',null);
+let LIBF='all';
+const MCOL=['var(--tomato-ink)','var(--fish)','var(--basil)','var(--g)'];
+function mcol(a){const i=HOUSE.members.indexOf(a);return i<0?'var(--soft)':MCOL[i%MCOL.length]}
+function deN(a){return (/^[aeiouyhéèêàâîôû]/i.test(a)?'d\'':'de ')+a}
+function badge(a){return a?'<span class="who" style="background:'+mcol(a)+'" title="Recette '+esc(deN(a))+'">'+esc(a.charAt(0).toUpperCase())+'</span>':''}
+let HOUSE=Object.assign({members:['David','Alex'],ry:{},pantry:[],recur:[{n:'lait',q:'4 l',ry:'cr'},{n:'céréales',q:'1 paquet',ry:'ep'},{n:'compotes',q:'12',ry:'ep'},{n:'biscuits pour le goûter',q:'2 paquets',ry:'ep'},{n:'fruits',q:'2 kg',ry:'fl'}]},store.get('house',{}));
 let S=Object.assign({adults:2,kids:2,kidf:.6,wklunch:false,hol:true,wed:false,rep:2,vary:true,minF:1,minV:1,maxT:0,rest:true,season:true},store.get('settings',{}));
 // Vacances scolaires zone C (Paris), jours sans classe inclus (veille de reprise comprise)
 const ZC=[['2025-10-18','2025-11-02','Toussaint'],['2025-12-20','2026-01-04','Noël'],['2026-02-21','2026-03-08','Hiver'],['2026-04-18','2026-05-03','Printemps'],['2026-05-14','2026-05-17','Pont de l\'Ascension'],['2026-07-04','2026-08-31','Été'],
@@ -523,9 +536,12 @@ function renderSide(){
   $('last').innerHTML=ids.length?ids.map(byId).filter(Boolean).map(r=>'<span class="chip" style="padding-right:12px">'+esc(r.name)+'</span>').join(''):'<span class="hint">Pas de menus tirés la semaine précédente.</span>';
   const ct=t=>lib.filter(r=>r.type===t).length,fv=lib.filter(r=>r.fav===1).length,av=lib.filter(r=>r.fav===-1).length;
   $('count').innerHTML='<b>'+lib.length+'</b><span>recette'+(lib.length>1?'s':'')+'</span><span class="tag t-viande">'+ct('viande')+' viande</span><span class="tag t-poisson">'+ct('poisson')+' poisson</span><span class="tag t-végé">'+ct('végé')+' végé</span>'+(fv?'<span class="src">❤️ '+fv+'</span>':'')+(av?'<span class="src" style="color:var(--soft)">👎 '+av+'</span>':'');
-  $('lib').innerHTML=lib.map(r=>'<span class="chip"><span class="t-'+esc(r.type)+'">●</span><button class="nm" data-open="'+esc(r.id)+'">'+(r.fav===1?'❤️ ':r.fav===-1?'👎 ':'')+esc(r.name)+'</button><button class="ic" data-del="'+esc(r.id)+'" aria-label="Supprimer '+esc(r.name)+'">'+ICON.x+'</button></span>').join('');
+  const nb=a=>lib.filter(r=>a==='ex'?!r.author:r.author===a).length;
+  $('libf').innerHTML=[['all','Toutes ('+lib.length+')']].concat(HOUSE.members.map(m=>[m,m+' ('+nb(m)+')']),[['ex','Exemples ('+nb('ex')+')']]).map(([k,l])=>'<button data-f="'+esc(k)+'" aria-pressed="'+(LIBF===k)+'">'+esc(l)+'</button>').join('');
+  const shown=lib.filter(r=>LIBF==='all'||(LIBF==='ex'?!r.author:r.author===LIBF));
+  $('lib').innerHTML=(shown.length?'':'<span class="hint">Aucune recette pour l\'instant.</span>')+shown.map(r=>'<span class="chip">'+badge(r.author)+'<span class="t-'+esc(r.type)+'">●</span><button class="nm" data-open="'+esc(r.id)+'">'+(r.fav===1?'❤️ ':r.fav===-1?'👎 ':'')+esc(r.name)+'</button><button class="ic" data-del="'+esc(r.id)+'" aria-label="Supprimer '+esc(r.name)+'">'+ICON.x+'</button></span>').join('');
 }
-function render(){renderHead();renderWeek();renderShop();renderNut();renderCal();renderSide()}
+function render(){renderMe();renderHead();renderWeek();renderShop();renderNut();renderCal();renderSide()}
 function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('show'),2000)}
 function goto(m){cur=monday(m);calMonth=new Date(cur.getFullYear(),cur.getMonth(),1);render()}
 
@@ -550,7 +566,7 @@ function importRows(rows){
   const find=(re,d)=>{const i=h.findIndex(c=>re.test(c));return i>=0?i:d};
   const hasHead=h.some(c=>/plat|menu|recette|ingredient/.test(c));
   const C={plat:find(/plat|menu|recette/,0),type:find(/type|cat/,1),q:find(/quant|qte|qt/,2),u:find(/unit/,3),n:find(/ingred|produit|aliment/,4),r:find(/rayon/,5),
-    k:find(/kcal|calor|energ/,6),p:find(/prot/,7),g:find(/gluc|carb/,8),l:find(/lipid|gras/,9),w:find(/piece|poids/,10),prep:find(/prep|temps/,-1),cook:find(/cuisson/,-1),url:find(/lien|url|source/,-1),st:find(/etape|instruction/,-1),sea:find(/saison/,-1),fav:find(/favori|avis|note/,-1),big:find(/restes?$|grande/,-1)};
+    k:find(/kcal|calor|energ/,6),p:find(/prot/,7),g:find(/gluc|carb/,8),l:find(/lipid|gras/,9),w:find(/piece|poids/,10),prep:find(/prep|temps/,-1),cook:find(/cuisson/,-1),url:find(/lien|url|source/,-1),st:find(/etape|instruction/,-1),sea:find(/saison/,-1),au:find(/auteur|propose|qui/,-1),fav:find(/favori|avis|note/,-1),big:find(/restes?$|grande/,-1)};
   const out=[];let curR=null;
   (hasHead?rows.slice(1):rows).forEach(r=>{
     const name=String(r[C.plat]??'').trim();
@@ -558,6 +574,7 @@ function importRows(rows){
       const cell=i=>i>=0?String(r[i]??'').trim():'';
       if(fnum(cell(C.prep))!=null)curR.prep=fnum(cell(C.prep));if(fnum(cell(C.cook))!=null)curR.cook=fnum(cell(C.cook));
       if(/^https?:\/\//i.test(cell(C.url)))curR.url=cell(C.url);
+      const au=cell(C.au);if(au){const m=HOUSE.members.find(x=>lc(x)===lc(au));curR.author=m||au}
       const se=lc(cell(C.sea)).normalize('NFD').replace(/[\u0300-\u036f]/g,'');if(/ete|summer/.test(se))curR.season='ete';else if(/hiver|winter/.test(se))curR.season='hiver';
       const fv=lc(cell(C.fav));if(/oui|favori|❤|coeur|cœur|1/.test(fv))curR.fav=1;else if(/eviter|éviter|non|👎|-1/.test(fv))curR.fav=-1;
       if(/oui|x|1|vrai/.test(lc(cell(C.big))))curR.big=true;
@@ -579,8 +596,9 @@ function handleFile(file){
     const ws=wb.Sheets[wb.SheetNames[0]];const recs=importRows(XLSX.utils.sheet_to_json(ws,{header:1,defval:''}));
     if(!recs.length)throw new Error('Aucun plat trouvé : vérifie les colonnes');
     const mode=document.querySelector('input[name=mode]:checked').value;
+    const own=$('iown').value;recs.forEach(r=>{if(!r.author&&own)r.author=own});
     const mk=(r,i)=>Object.assign({id:'f'+Date.now()+'_'+i},r);
-    if(mode==='replace'){lib=recs.map(mk)}else{recs.forEach((r,i)=>{const ex=lib.find(x=>x.name.toLowerCase()===r.name.toLowerCase());if(ex){ex.type=r.type;ex.ing=r.ing;['prep','cook','url','steps','season','fav','big'].forEach(k=>{if(r[k]!=null)ex[k]=r[k]})}else lib.push(mk(r,i))})}
+    if(mode==='replace'){lib=recs.map(mk)}else{recs.forEach((r,i)=>{const ex=lib.find(x=>x.name.toLowerCase()===r.name.toLowerCase()&&(!x.author||x.author===r.author));if(ex){ex.type=r.type;ex.ing=r.ing;['prep','cook','url','steps','season','fav','big','author'].forEach(k=>{if(r[k]!=null)ex[k]=r[k]})}else lib.push(mk(r,i))})}
     Object.values(weeks).forEach(w=>Object.keys(w.plan).forEach(k=>{if(!byId(w.plan[k].id))delete w.plan[k]}));
     save();render();msg.textContent=recs.length+' plat'+(recs.length>1?'s':'')+' importé'+(recs.length>1?'s':'')+' depuis « '+file.name+' ».';
   }catch(err){msg.textContent='Import impossible : '+err.message;msg.style.color='var(--tomato-ink)'}};
@@ -628,7 +646,7 @@ function renderRv(edit){
   const head='<div class="row"><h2 id="rvt">'+esc(r.name)+'</h2><button class="ic" data-rv="close" aria-label="Fermer">'+ICON.x+'</button></div>';
   if(!edit){
     const f=factor(),url=/^https?:\/\//i.test(r.url||'')?r.url:'';
-    b.innerHTML=head+'<div class="meta"><span class="tag t-'+esc(r.type)+'">'+esc(r.type)+'</span>'+(r.prep?'<span>Préparation '+num(+r.prep)+' min</span>':'')+(r.cook?'<span>Cuisson '+num(+r.cook)+' min</span>':'')+(r.season&&r.season!=='toute'?'<span class="hol">'+(r.season==='ete'?'Été':'Hiver')+'</span>':'')+(r.big?'<span class="hol">Grande quantité · restes</span>':'')+(url?'<a href="'+esc(url)+'" target="_blank" rel="noopener">Recette d\'origine ↗</a>':'')+'</div>'+
+    b.innerHTML=head+'<div class="meta">'+(r.author?'<span style="display:inline-flex;align-items:center;gap:6px;font-weight:700;color:var(--ink)">'+badge(r.author)+'Recette '+esc(deN(r.author))+'</span>':'<span>Recette d\'exemple</span>')+'<span class="tag t-'+esc(r.type)+'">'+esc(r.type)+'</span>'+(r.prep?'<span>Préparation '+num(+r.prep)+' min</span>':'')+(r.cook?'<span>Cuisson '+num(+r.cook)+' min</span>':'')+(r.season&&r.season!=='toute'?'<span class="hol">'+(r.season==='ete'?'Été':'Hiver')+'</span>':'')+(r.big?'<span class="hol">Grande quantité · restes</span>':'')+(url?'<a href="'+esc(url)+'" target="_blank" rel="noopener">Recette d\'origine ↗</a>':'')+'</div>'+
       '<h3>Ingrédients <span class="hint">pour le foyer ('+num(f,1)+' portions adulte)</span></h3><ul class="ingl">'+r.ing.map(i=>'<li><span>'+esc(i[2])+'</span><b>'+fmt(i[0]*f,i[1])+'</b></li>').join('')+'</ul>'+
       '<h3>Préparation</h3>'+(r.steps&&r.steps.length?'<ol class="steps">'+r.steps.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ol>':'<p class="hint">Pas encore d\'étapes : clique sur « Modifier » pour les ajouter.</p>')+
       '<div class="actions" style="margin-top:8px"><button class="btn'+(r.fav===1?' main':'')+'" data-rv="fav" aria-pressed="'+(r.fav===1)+'">❤️ Favori</button><button class="btn'+(r.fav===-1?' main':'')+'" data-rv="avoid" aria-pressed="'+(r.fav===-1)+'">👎 À éviter</button></div>'+
@@ -641,6 +659,7 @@ function renderRv(edit){
       '<label class="f">Préparation (min)<input type="number" min="0" name="prep" value="'+esc(r.prep??'')+'"></label><label class="f">Cuisson (min)<input type="number" min="0" name="cook" value="'+esc(r.cook??'')+'"></label></div>'+
       '<div class="g3"><label class="f">Saison<select name="season">'+[['toute','Toute l\'année'],['ete','Été'],['hiver','Hiver']].map(([v,l])=>'<option value="'+v+'"'+((r.season||'toute')===v?' selected':'')+'>'+l+'</option>').join('')+'</select></label>'+
       '<label class="f" style="grid-column:span 2;display:flex;align-items:center;gap:10px;font-weight:600"><input type="checkbox" name="big"'+(r.big?' checked':'')+' style="width:22px;height:22px;accent-color:var(--tomato)">Grande quantité : prévoir les restes le lendemain midi</label></div>'+
+      '<label class="f">Recette de<select name="author"><option value="">— (exemple)</option>'+HOUSE.members.concat(r.author&&!HOUSE.members.includes(r.author)?[r.author]:[]).map(m=>'<option'+(m===r.author?' selected':'')+'>'+esc(m)+'</option>').join('')+'</select></label>'+
       '<label class="f">Lien vers la recette<input type="url" name="url" placeholder="https://…" value="'+esc(r.url||'')+'"></label>'+
       '<label class="f">Ingrédients pour 1 adulte, un par ligne<textarea name="ing">'+esc(r.ing.map(ingLine).join('\n'))+'</textarea></label>'+
       '<label class="f">Étapes, une par ligne<textarea name="steps">'+esc((r.steps||[]).join('\n'))+'</textarea></label>'+
@@ -653,7 +672,7 @@ $('rvb').addEventListener('click',e=>{const a=e.target.closest('[data-rv]');if(!
   renderRv(v==='edit')});
 $('rvb').addEventListener('submit',e=>{e.preventDefault();const r=byId(rvId),fd=new FormData(e.target);if(!r)return;
   const old={};r.ing.forEach(i=>old[lc(i[2])]=i);
-  r.name=String(fd.get('name')).trim()||r.name;r.type=fd.get('type');
+  r.name=String(fd.get('name')).trim()||r.name;r.type=fd.get('type');if(fd.get('author'))r.author=fd.get('author');else delete r.author;
   const pn=fnum(fd.get('prep')),cn=fnum(fd.get('cook'));if(pn!=null)r.prep=pn;else delete r.prep;if(cn!=null)r.cook=cn;else delete r.cook;
   const u=String(fd.get('url')).trim();if(/^https?:\/\//i.test(u))r.url=u;else delete r.url;
   r.ing=parseLines(String(fd.get('ing'))).map(i=>{const o=old[lc(i[2])];if(o){i[3]=o[3];if(o[4])i[4]=o[4]}return i});
@@ -692,10 +711,12 @@ $('minV').addEventListener('input',e=>{S.minV=Math.max(0,Math.min(7,parseInt(e.t
 $('maxT').addEventListener('change',e=>{S.maxT=parseInt(e.target.value)||0;save()});
 $('season').addEventListener('change',e=>{S.season=e.target.checked;save()});
 $('rest').addEventListener('change',e=>{S.rest=e.target.checked;save()});
+$('me').addEventListener('click',e=>{const b=e.target.closest('[data-me]');if(!b)return;ME=ME===b.dataset.me?null:b.dataset.me;store.set('me',ME);renderMe();toast(ME?'Cet appareil est celui '+deN(ME):'Personne n\'est choisi sur cet appareil')});
+$('libf').addEventListener('click',e=>{const b=e.target.closest('[data-f]');if(!b)return;LIBF=b.dataset.f;renderSide()});
 $('lib').addEventListener('click',e=>{const o=e.target.closest('[data-open]');if(o)return openRv(o.dataset.open);const b=e.target.closest('[data-del]');if(!b)return;if(lib.length<=1)return toast('Garde au moins un menu');
   const id=b.dataset.del;lib=lib.filter(r=>r.id!==id);Object.values(weeks).forEach(w=>Object.keys(w.plan).forEach(k=>{if(w.plan[k].id===id)delete w.plan[k]}));save();render()});
 $('add').addEventListener('submit',e=>{e.preventDefault();const n=$('nname').value.trim();if(!n)return;
-  lib.push({id:'u'+Date.now(),name:n,type:$('ntype').value,ing:parseLines($('ning').value)});$('nname').value='';$('ning').value='';save();render();toast('« '+n+' » ajouté')});
+  lib.push(Object.assign({id:'u'+Date.now(),name:n,type:$('ntype').value,ing:parseLines($('ning').value)},ME?{author:ME}:{}));$('nname').value='';$('ning').value='';save();render();toast('« '+n+' » ajouté')});
 $('file').addEventListener('change',e=>{if(e.target.files[0])handleFile(e.target.files[0]);e.target.value=''});
 const dz=$('drop');['dragover','dragenter'].forEach(t=>dz.addEventListener(t,e=>{e.preventDefault();dz.classList.add('over')}));
 ['dragleave','drop'].forEach(t=>dz.addEventListener(t,()=>dz.classList.remove('over')));
@@ -732,7 +753,7 @@ function push(){
 function applyRemote(data){
   let ch=false;
   Object.keys(data).forEach(k=>{const v=data[k];if(typeof v!=='string'||synced[k]===v)return;
-    try{const o=JSON.parse(v);if(k==='lib')lib=o;else if(k==='house')HOUSE=Object.assign({ry:{},pantry:[],recur:[]},o);else if(k==='settings')S=Object.assign(S,o);else if(k.startsWith('w_'))weeks[k.slice(2)]=o;else return;synced[k]=v;ch=true}catch(e){}});
+    try{const o=JSON.parse(v);if(k==='lib')lib=o;else if(k==='house')HOUSE=Object.assign({members:['David','Alex'],ry:{},pantry:[],recur:[]},o);else if(k==='settings')S=Object.assign(S,o);else if(k.startsWith('w_'))weeks[k.slice(2)]=o;else return;synced[k]=v;ch=true}catch(e){}});
   if(ch){if(migrate())save();else saveLocal();render()}
 }
 function connect(){
@@ -745,7 +766,7 @@ function connect(){
   },err=>setStat('err','Accès refusé ('+err.code+')'));
 }
 function genCode(){const a='abcdefghjkmnpqrstuvwxyz23456789',r=new Uint32Array(24);crypto.getRandomValues(r);return [...r].map(x=>a[x%a.length]).join('')}
-function createFoyer(){foyer=genCode();store.set('foyer',foyer);synced={};connect();push();toast('Foyer créé : invite ton colocataire')}
+function createFoyer(){foyer=genCode();store.set('foyer',foyer);synced={};connect();push();toast('Foyer créé : envoie le lien d\'invitation')}
 async function joinFoyer(code){
   code=String(code||'').trim().toLowerCase().replace(/^.*#foyer-/,'');
   const msg=$('smsg');if(msg)msg.textContent='';
@@ -758,16 +779,20 @@ async function joinFoyer(code){
 }
 function leaveFoyer(){if(unsub){unsub();unsub=null}foyer=null;store.set('foyer',null);synced={};connect();toast('Cet appareil n\'est plus synchronisé')}
 function invite(){return SITE+'#foyer-'+foyer}
+function renderMe(){
+  $('me').innerHTML=HOUSE.members.map(m=>'<button data-me="'+esc(m)+'" aria-pressed="'+(ME===m)+'">'+badge(m)+' '+esc(m)+'</button>').join('');
+  $('iown').innerHTML=HOUSE.members.map(m=>'<option'+(m===ME?' selected':'')+'>'+esc(m)+'</option>').join('')+'<option value=""'+(ME?'':' selected')+'>Personne (exemples)</option>';
+}
 function renderSync(){
   const b=$('sbody');
   if(!db){b.innerHTML='<p class="hint">La synchronisation n\'est pas disponible ici. Ouvre l\'appli depuis <a href="'+SITE+'">plutus2811.github.io/menus</a>.</p>';return}
-  if(!foyer){b.innerHTML='<p style="margin:0 0 10px">Partage le planning, la bibliothèque et la liste de courses entre tes appareils et avec ton colocataire, en direct.</p>'+
+  if(!foyer){b.innerHTML='<p style="margin:0 0 10px">Partage le planning, la bibliothèque et la liste de courses entre tous vos appareils, en direct.</p>'+
     '<button class="btn main" data-act="create">Créer un foyer</button>'+
     '<p class="hint" style="margin:16px 0 0">Déjà invité ? Colle le code ou le lien reçu. Les données de cet appareil seront remplacées par celles du foyer.</p>'+
     '<div class="inrow"><input type="text" id="jcode" placeholder="Code ou lien d\'invitation" autocomplete="off"><button class="btn" data-act="join">Rejoindre</button></div><div class="msg" id="smsg" role="status" style="color:var(--tomato-ink)"></div>';return}
   b.innerHTML='<p style="margin:0">Cet appareil partage le foyer :</p><div class="code">'+esc(foyer)+'</div>'+
     '<div class="actions"><button class="btn main" data-act="link">Copier le lien d\'invitation</button><button class="btn" data-act="code">Copier le code</button><button class="btn" data-act="leave">Déconnecter cet appareil</button></div>'+
-    '<p class="hint" style="margin:10px 0 0">Ouvre le lien d\'invitation sur chaque appareil (ton iPhone, celui de ton colocataire) : ils rejoignent le foyer automatiquement. Garde-le pour vous : quiconque a le lien voit vos menus.</p>';
+    '<p class="hint" style="margin:10px 0 0">Ouvre le lien d\'invitation sur chaque appareil (vos téléphones et ordinateurs) : ils rejoignent le foyer automatiquement. Garde-le pour vous : quiconque a le lien voit vos menus.</p>';
 }
 $('sbody').addEventListener('click',async e=>{const a=e.target.closest('[data-act]');if(!a)return;const act=a.dataset.act;
   if(act==='create')createFoyer();

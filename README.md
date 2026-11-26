@@ -5,6 +5,7 @@ Petite appli web pour planifier les repas de la semaine et générer la liste de
 ## Fonctionnalités
 
 - Tirage aléatoire des menus à partir d'une bibliothèque de plats (soirs, midis du week-end, midis en semaine en option)
+- Auteur de chaque recette (David, Alex) : prénom choisi par appareil, appliqué aux ajouts et imports, filtre de la bibliothèque
 - Plats favoris (tirés 3 fois plus souvent) ou à éviter (jamais tirés automatiquement)
 - Équilibre : nombre minimum de repas poisson et végé par semaine, temps maximum les soirs d'école
 - Saisons : plats d'été (avril à septembre) ou d'hiver
@@ -54,7 +55,7 @@ La clé `apiKey` Firebase présente dans `index.html` est un identifiant public 
 
 ## Format d'import
 
-Une ligne par ingrédient, quantités pour 1 adulte. Laisser « Plat » vide pour continuer le plat du dessus. Les colonnes nutritionnelles (pour 100 g) sont facultatives, ainsi que Préparation (min), Cuisson (min), Lien, Étapes (séparées par « ; »), Saison (été / hiver), Favori (oui / éviter) et Restes (oui), sur la ligne du plat.
+Une ligne par ingrédient, quantités pour 1 adulte. Laisser « Plat » vide pour continuer le plat du dessus. Les colonnes nutritionnelles (pour 100 g) sont facultatives, ainsi que Préparation (min), Cuisson (min), Lien, Étapes (séparées par « ; »), Saison (été / hiver), Favori (oui / éviter), Restes (oui) et Auteur, sur la ligne du plat.
 
 | Plat | Type | Quantité | Unité | Ingrédient | Rayon | kcal | Protéines | Glucides | Lipides | g/pièce |
 |---|---|---|---|---|---|---|---|---|---|---|
