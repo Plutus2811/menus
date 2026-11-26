@@ -48,7 +48,7 @@ button,select,input,textarea{font:inherit;color:inherit}
 .slot .when{font-size:13px;color:var(--soft);font-weight:700}
 .slot .name{font-weight:700;line-height:1.25;flex:1}
 .slot .kc{font-size:13px;color:var(--soft)}
-.slot>.row:last-child{flex-wrap:wrap;row-gap:2px}.slot>.row:last-child>span:last-child{display:flex;margin-left:auto}.slot .ic{width:34px;height:34px}
+.slot>.row:last-child{flex-wrap:wrap;row-gap:2px}.slot>.row:last-child>span:last-child{display:flex;margin-left:auto}.slot .ic{width:32px;height:34px}
 #theme svg{width:20px;height:20px}
 .slot.new .name{animation:pop .35s ease}
 @keyframes pop{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
@@ -455,7 +455,7 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const byId=id=>lib.find(r=>r.id===id);
 const num=(x,d)=>x.toLocaleString('fr-FR',{maximumFractionDigits:d||0});
-const ICON={chef:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 14.5a4 4 0 0 1-.6-7.9 5 5 0 0 1 11.2 0A4 4 0 0 1 17 14.5V20H7z"/><path d="M7 17h10"/></svg>',lock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
+const ICON={erase:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 20 3.6 15.1a1.6 1.6 0 0 1 0-2.3l8.9-8.9a1.6 1.6 0 0 1 2.3 0l5.6 5.6a1.6 1.6 0 0 1 0 2.3L12 20z"/><path d="M8.3 8.1l7.6 7.6"/><path d="M12 20h8.5"/></svg>',chef:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 14.5a4 4 0 0 1-.6-7.9 5 5 0 0 1 11.2 0A4 4 0 0 1 17 14.5V20H7z"/><path d="M7 17h10"/></svg>',lock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
 open:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 7.5-2"/></svg>',
 roll:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/></svg>',
 x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg>',
@@ -553,10 +553,10 @@ function renderWeek(){
     const lab=s.when==='midi'?'Midi':'Soir',ed='<button class="ic" data-edit="'+s.key+'" aria-label="Choisir le repas à la main">'+ICON.pen+'</button>';
     if(!s.on)return s.base?'<div class="slot off"><button data-add="'+s.key+'">Pas de repas · ajouter</button></div>':'<div class="slot off">Cantine</div>';
     const p=plan[s.key],r=p&&p.id&&byId(p.id);
-    if(p&&p.txt)return '<div class="slot"><span class="when">'+lab+'</span><span class="name">'+esc(p.txt)+'</span><span class="kc">repas libre</span><div class="row"><span class="tag t-libre">libre</span><span>'+ed+'<button class="ic" data-roll="'+s.key+'" aria-label="Tirer un plat à la place">'+ICON.roll+'</button></span></div></div>';
+    if(p&&p.txt)return '<div class="slot"><span class="when">'+lab+'</span><span class="name">'+esc(p.txt)+'</span><span class="kc">repas libre</span><div class="row"><span class="tag t-libre">libre</span><span>'+ed+'<button class="ic" data-erase="'+s.key+'" aria-label="Effacer ce repas" title="Effacer ce repas">'+ICON.erase+'</button>'+'<button class="ic" data-roll="'+s.key+'" aria-label="Tirer un plat à la place">'+ICON.roll+'</button></span></div></div>';
     if(!r)return '<div class="slot"><span class="when">'+lab+'</span><span class="name" style="color:var(--soft)">À tirer</span><div class="row"><span></span><span>'+ed+'<button class="ic" data-roll="'+s.key+'" aria-label="Tirer ce repas">'+ICON.roll+'</button></span></div></div>';
     const n=mealNut(r);
-    return '<div class="slot'+(fresh.has(s.key)?' new':'')+'"><div class="row"><span class="when">'+lab+'</span>'+(last.includes(r.id)?'<span class="rep">déjà sorti</span>':'')+'</div><button class="nm" data-open="'+esc(r.id)+'">'+(p.rest?'Restes : ':'')+(r.fav===1?'❤️ ':'')+esc(r.name)+'</button><span class="kc">≈ '+num(n.k)+' kcal · P '+num(n.p)+' g'+(r.prep||r.cook?' · '+((+r.prep||0)+(+r.cook||0))+' min':'')+'</span><div class="row"><span class="tag t-'+(p.rest?'libre':esc(r.type))+'">'+(p.rest?'restes':esc(r.type))+'</span><span>'+ed+'<button class="ic'+(p.locked?' on':'')+'" data-lock="'+s.key+'" aria-label="'+(p.locked?'Déverrouiller':'Garder')+' ce repas">'+(p.locked?ICON.lock:ICON.open)+'</button><button class="ic" data-roll="'+s.key+'" aria-label="Retirer ce repas">'+ICON.roll+'</button></span></div></div>';
+    return '<div class="slot'+(fresh.has(s.key)?' new':'')+'"><div class="row"><span class="when">'+lab+'</span>'+(last.includes(r.id)?'<span class="rep">déjà sorti</span>':'')+'</div><button class="nm" data-open="'+esc(r.id)+'">'+(p.rest?'Restes : ':'')+(r.fav===1?'❤️ ':'')+esc(r.name)+'</button><span class="kc">≈ '+num(n.k)+' kcal · P '+num(n.p)+' g'+(r.prep||r.cook?' · '+((+r.prep||0)+(+r.cook||0))+' min':'')+'</span><div class="row"><span class="tag t-'+(p.rest?'libre':esc(r.type))+'">'+(p.rest?'restes':esc(r.type))+'</span><span>'+ed+'<button class="ic'+(p.locked?' on':'')+'" data-lock="'+s.key+'" aria-label="'+(p.locked?'Déverrouiller':'Garder')+' ce repas">'+(p.locked?ICON.lock:ICON.open)+'</button>'+'<button class="ic" data-erase="'+s.key+'" aria-label="Effacer ce repas" title="Effacer ce repas">'+ICON.erase+'</button>'+'<button class="ic" data-roll="'+s.key+'" aria-label="Retirer ce repas">'+ICON.roll+'</button></span></div></div>';
   }).join('')+'</div>'}).join('');
 }
 function fmt(q,u){
@@ -770,6 +770,7 @@ $('cal').addEventListener('click',pickW);$('cal').addEventListener('keydown',e=>
 $('week').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
   if(b.dataset.lock){const p=W().plan[b.dataset.lock];if(p){p.locked=!p.locked;save();renderWeek()}}
   if(b.dataset.roll){const p=W().plan[b.dataset.roll];if(p&&p.txt)delete W().plan[b.dataset.roll];fill(b.dataset.roll)}
+  if(b.dataset.erase){delete W().plan[b.dataset.erase];save();render()}
   if(b.dataset.edit)openEd(b.dataset.edit);
   if(b.dataset.open)openRv(b.dataset.open);
   if(b.dataset.add){W().on[b.dataset.add]=true;openEd(b.dataset.add)}});
