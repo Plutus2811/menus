@@ -108,6 +108,12 @@ textarea{min-height:100px;resize:vertical}
 .radio input{accent-color:var(--tomato);width:18px;height:18px}
 .msg{font-size:14px;margin-top:8px;font-weight:600}
 .note{font-size:13px;color:var(--soft);margin-top:12px}
+.pill{font-size:13px;font-weight:700;padding:3px 10px;border-radius:99px;background:var(--wash);white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.pill::before{content:"";width:8px;height:8px;border-radius:99px;background:currentColor}
+.pill.ok{color:var(--basil)}.pill.off{color:var(--soft)}.pill.err{color:var(--tomato-ink)}
+.code{font:600 15px/1.4 ui-monospace,Menlo,monospace;background:var(--wash);padding:10px 12px;border-radius:10px;overflow-wrap:anywhere;margin:8px 0 12px}
+.inrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.inrow input{flex:1 1 200px;min-height:44px;padding:8px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);font-size:16px}
 .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:12px;font-weight:700;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.show{opacity:1}
 @media(max-width:1100px){.week{grid-template-columns:repeat(4,minmax(0,1fr))}}
@@ -120,7 +126,7 @@ textarea{min-height:100px;resize:vertical}
   <div class="top">
     <div>
       <h1>Menus de la semaine</h1>
-      <p class="sub" id="who"></p>
+      <p class="sub"><span id="who"></span> <span class="pill off" id="hstat">Sur cet appareil</span></p>
     </div>
     <div class="actions">
       <div class="wbar">
@@ -162,6 +168,11 @@ textarea{min-height:100px;resize:vertical}
 
 <div class="band">
   <div class="cols">
+    <div class="stackc">
+    <section class="panel">
+      <div class="row" style="margin-bottom:8px"><h2 style="margin:0">Partage du foyer</h2><span class="pill off" id="sstat">Sur cet appareil</span></div>
+      <div id="sbody"></div>
+    </section>
     <section class="panel">
       <h2>Paramètres</h2>
       <div class="field"><span>Adultes</span><input type="number" id="adults" min="0" max="10"></div>
@@ -173,6 +184,7 @@ textarea{min-height:100px;resize:vertical}
       <h3 style="margin-top:14px;font-size:18px" id="lasttitle">Semaine précédente</h3>
       <div class="last" id="last"></div>
     </section>
+    </div>
     <section class="panel">
       <h2>Bibliothèque de menus <span class="hint" id="count"></span></h2>
       <div class="lib" id="lib"></div>
@@ -201,6 +213,8 @@ textarea{min-height:100px;resize:vertical}
 <div class="toast" id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/firebase@10.14.1/firebase-app-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/firebase@10.14.1/firebase-firestore-compat.js"></script>
 <script>
 {
 const DAYS=['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
@@ -266,7 +280,8 @@ function hasPlan(m){const w=weeks[wkey(m)];return w&&Object.keys(w.plan).length>
 
 function slots(){const out=[];DAYS.forEach((d,i)=>['midi','soir'].forEach(w=>{out.push({key:i+'-'+w,day:i,when:w,on:w==='soir'||i>=5||S.wklunch})}));return out}
 function factor(){return S.adults+S.kids*S.kidf}
-function save(){store.set('lib',lib);store.set('settings',S);store.set('weeks',weeks)}
+function saveLocal(){store.set('lib',lib);store.set('settings',S);store.set('weeks',weeks)}
+function save(){saveLocal();pushSoon()}
 function pick(a){return a[Math.floor(Math.random()*a.length)]}
 
 function fill(onlyKey,silent){
@@ -442,9 +457,73 @@ dz.addEventListener('drop',e=>{e.preventDefault();const f=e.dataTransfer.files[0
 $('tpl').addEventListener('click',async()=>{const t=['Plat\tType\tQuantité\tUnité\tIngrédient\tRayon\tkcal\tProtéines\tGlucides\tLipides\tg/pièce','Lasagnes\tviande\t100\tg\tbœuf haché\tBoucherie','\t\t3\tpièce\tfeuilles de lasagne\tÉpicerie\t350\t12\t70\t1.5\t20'].join('\n');
   try{await navigator.clipboard.writeText(t);toast('Modèle copié : colle-le dans Calc en A1')}catch(err){toast('Copie impossible ici')}});
 
+/* ---------- synchronisation du foyer (Firebase Firestore) ---------- */
+const FB={apiKey:"AIzaSyB6m1o5K6plO-e2emzCIzXTpZq5QNsEOeY",authDomain:"menus-6235a.firebaseapp.com",projectId:"menus-6235a",storageBucket:"menus-6235a.firebasestorage.app",messagingSenderId:"576910682768",appId:"1:576910682768:web:f83cf963d2eff6d96c8615"};
+const SITE='https://plutus2811.github.io/menus/';
+let db=null,foyer=store.get('foyer',null),unsub=null,synced={},pushT=null,stat=['off','Sur cet appareil'];
+try{if(window.firebase){firebase.initializeApp(FB);db=firebase.firestore()}}catch(e){db=null}
+function setStat(c,t){stat=[c,t];['sstat','hstat'].forEach(id=>{const e=$(id);e.className='pill '+c;e.textContent=t})}
+function fields(){const f={lib:JSON.stringify(lib),settings:JSON.stringify(S)};Object.keys(weeks).forEach(k=>{f['w_'+k]=JSON.stringify(weeks[k])});return f}
+function pushSoon(){if(!db||!foyer)return;clearTimeout(pushT);pushT=setTimeout(push,500)}
+function push(){
+  if(!db||!foyer)return;const f=fields(),d={};
+  Object.keys(f).forEach(k=>{if(synced[k]!==f[k])d[k]=f[k]});if(!Object.keys(d).length)return;
+  Object.keys(d).forEach(k=>synced[k]=d[k]);
+  d.maj=firebase.firestore.FieldValue.serverTimestamp();
+  db.collection('foyers').doc(foyer).set(d,{merge:true}).catch(e=>setStat('err','Erreur ('+e.code+')'));
+}
+function applyRemote(data){
+  let ch=false;
+  Object.keys(data).forEach(k=>{const v=data[k];if(typeof v!=='string'||synced[k]===v)return;
+    try{const o=JSON.parse(v);if(k==='lib')lib=o;else if(k==='settings')S=Object.assign(S,o);else if(k.startsWith('w_'))weeks[k.slice(2)]=o;else return;synced[k]=v;ch=true}catch(e){}});
+  if(ch){saveLocal();render()}
+}
+function connect(){
+  if(unsub){unsub();unsub=null}
+  if(!db||!foyer){setStat(db?'off':'err',db?'Sur cet appareil':'Synchro indisponible');renderSync();return}
+  setStat('off','Connexion…');renderSync();
+  unsub=db.collection('foyers').doc(foyer).onSnapshot({includeMetadataChanges:true},snap=>{
+    if(snap.exists&&!snap.metadata.hasPendingWrites)applyRemote(snap.data());
+    setStat(snap.metadata.fromCache?'off':'ok',snap.metadata.fromCache?'Hors connexion':'Synchronisé');
+  },err=>setStat('err','Accès refusé ('+err.code+')'));
+}
+function genCode(){const a='abcdefghjkmnpqrstuvwxyz23456789',r=new Uint32Array(24);crypto.getRandomValues(r);return [...r].map(x=>a[x%a.length]).join('')}
+function createFoyer(){foyer=genCode();store.set('foyer',foyer);synced={};connect();push();toast('Foyer créé : invite ton colocataire')}
+async function joinFoyer(code){
+  code=String(code||'').trim().toLowerCase().replace(/^.*#foyer-/,'');
+  const msg=$('smsg');if(msg)msg.textContent='';
+  if(!/^[a-z0-9]{20,}$/.test(code)){if(msg)msg.textContent='Code invalide.';return}
+  try{
+    const snap=await db.collection('foyers').doc(code).get();
+    if(!snap.exists){if(msg)msg.textContent='Aucun foyer avec ce code.';return}
+    foyer=code;store.set('foyer',foyer);synced={};weeks={};applyRemote(snap.data());saveLocal();connect();render();toast('Foyer rejoint');
+  }catch(e){if(msg)msg.textContent='Connexion impossible ('+(e.code||e.message)+').'}
+}
+function leaveFoyer(){if(unsub){unsub();unsub=null}foyer=null;store.set('foyer',null);synced={};connect();toast('Cet appareil n\'est plus synchronisé')}
+function invite(){return SITE+'#foyer-'+foyer}
+function renderSync(){
+  const b=$('sbody');
+  if(!db){b.innerHTML='<p class="hint">La synchronisation n\'est pas disponible ici. Ouvre l\'appli depuis <a href="'+SITE+'">plutus2811.github.io/menus</a>.</p>';return}
+  if(!foyer){b.innerHTML='<p style="margin:0 0 10px">Partage le planning, la bibliothèque et la liste de courses entre tes appareils et avec ton colocataire, en direct.</p>'+
+    '<button class="btn main" data-act="create">Créer un foyer</button>'+
+    '<p class="hint" style="margin:16px 0 0">Déjà invité ? Colle le code ou le lien reçu. Les données de cet appareil seront remplacées par celles du foyer.</p>'+
+    '<div class="inrow"><input type="text" id="jcode" placeholder="Code ou lien d\'invitation" autocomplete="off"><button class="btn" data-act="join">Rejoindre</button></div><div class="msg" id="smsg" role="status" style="color:var(--tomato-ink)"></div>';return}
+  b.innerHTML='<p style="margin:0">Cet appareil partage le foyer :</p><div class="code">'+esc(foyer)+'</div>'+
+    '<div class="actions"><button class="btn main" data-act="link">Copier le lien d\'invitation</button><button class="btn" data-act="code">Copier le code</button><button class="btn" data-act="leave">Déconnecter cet appareil</button></div>'+
+    '<p class="hint" style="margin:10px 0 0">Ouvre le lien d\'invitation sur chaque appareil (ton iPhone, celui de ton colocataire) : ils rejoignent le foyer automatiquement. Garde-le pour vous : quiconque a le lien voit vos menus.</p>';
+}
+$('sbody').addEventListener('click',async e=>{const a=e.target.closest('[data-act]');if(!a)return;const act=a.dataset.act;
+  if(act==='create')createFoyer();
+  if(act==='join')joinFoyer($('jcode').value);
+  if(act==='leave')leaveFoyer();
+  if(act==='link'||act==='code'){try{await navigator.clipboard.writeText(act==='link'?invite():foyer);toast(act==='link'?'Lien copié':'Code copié')}catch(err){toast('Copie impossible ici')}}});
+
 /* démo : semaine précédente déjà tirée pour montrer les reprises */
 if(!Object.keys(weeks).length){const c=cur;cur=addDays(c,-7);fill(null,true);cur=c;fill(null,true);fresh.clear()}
 render();
+connect();
+const hm=location.hash.match(/^#foyer-([a-z0-9]{20,})$/);
+if(hm&&db){if(hm[1]!==foyer)joinFoyer(hm[1]);try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}}
 }
 </script>
 </body>

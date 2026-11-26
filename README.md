@@ -17,7 +17,29 @@ Petite appli web pour planifier les repas de la semaine et générer la liste de
 
 Ouvrir `index.html` dans un navigateur. Aucun serveur ni installation nécessaire.
 
-Les données (plannings, bibliothèque, réglages) sont enregistrées dans le navigateur (`localStorage`) : elles ne sont pas partagées entre appareils.
+Les données (plannings, bibliothèque, réglages) sont enregistrées dans le navigateur (`localStorage`).
+
+## Partage du foyer
+
+Depuis https://plutus2811.github.io/menus/, la section « Partage du foyer » synchronise en direct le planning, la bibliothèque et la liste de courses entre plusieurs appareils, via Firebase Firestore.
+
+1. Sur un appareil : « Créer un foyer », puis « Copier le lien d'invitation ».
+2. Ouvrir ce lien sur les autres appareils : ils rejoignent le foyer automatiquement.
+
+Règles Firestore utilisées (un foyer n'est accessible qu'avec son code de 24 caractères) :
+
+```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /foyers/{foyer} {
+      allow read, write: if foyer.size() >= 20;
+    }
+  }
+}
+```
+
+La clé `apiKey` Firebase présente dans `index.html` est un identifiant public prévu pour être dans le code d'un site ; la protection des données repose sur les règles ci-dessus.
 
 ## Format d'import
 
