@@ -44,6 +44,7 @@ button,select,input,textarea{font:inherit;color:inherit}
 .slot .when{font-size:13px;color:var(--soft);font-weight:700}
 .slot .name{font-weight:700;line-height:1.25;flex:1}
 .slot .kc{font-size:13px;color:var(--soft);white-space:nowrap}
+.slot>.row:last-child{flex-wrap:wrap;row-gap:2px}.slot>.row:last-child>span:last-child{display:flex;margin-left:auto}.slot .ic{width:34px;height:34px}
 .slot.new .name{animation:pop .35s ease}
 @keyframes pop{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.slot.new .name{animation:none}}
@@ -114,6 +115,17 @@ textarea{min-height:100px;resize:vertical}
 .code{font:600 15px/1.4 ui-monospace,Menlo,monospace;background:var(--wash);padding:10px 12px;border-radius:10px;overflow-wrap:anywhere;margin:8px 0 12px}
 .inrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 .inrow input{flex:1 1 200px;min-height:44px;padding:8px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);font-size:16px}
+.hol{display:inline-block;font-family:Nunito,sans-serif;font-size:12px;font-weight:700;color:var(--fish);background:light-dark(#e8f1fa,#1f2d3a);border-radius:99px;padding:1px 8px;margin-top:4px;white-space:nowrap}
+.slot.off button{all:unset;cursor:pointer;color:var(--soft);font-size:13px;text-align:center;padding:6px;border-radius:8px}
+.slot.off button:hover{color:var(--tomato-ink)}.slot.off button:focus-visible{outline:3px solid var(--tomato-ink)}
+.t-libre{color:var(--soft)}
+.ov{position:fixed;inset:0;background:rgb(0 0 0/.45);display:grid;place-items:center;padding:16px;z-index:10}.ov[hidden]{display:none}
+.dlg{background:var(--card);border-radius:18px;padding:18px;width:min(520px,100%);max-height:88vh;display:flex;flex-direction:column;gap:10px;box-shadow:0 20px 60px rgb(0 0 0/.3)}
+.dlg h2{margin:0;font-size:24px}
+.dlg input{min-height:44px;padding:8px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);font-size:16px;width:100%}
+.edl{overflow:auto;display:grid;gap:4px;min-height:120px;flex:1}
+.edl button{text-align:left;min-height:44px;border:0;border-radius:10px;background:var(--wash);padding:8px 12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:600}
+.edl button:hover,.edl button:focus-visible{outline:2px solid var(--tomato)}
 .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:12px;font-weight:700;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.show{opacity:1}
 @media(max-width:1100px){.week{grid-template-columns:repeat(4,minmax(0,1fr))}}
@@ -178,7 +190,9 @@ textarea{min-height:100px;resize:vertical}
       <div class="field"><span>Adultes</span><input type="number" id="adults" min="0" max="10"></div>
       <div class="field"><span>Enfants</span><input type="number" id="kids" min="0" max="10"></div>
       <div class="field"><span>Portion enfant <span class="hint">(1 = portion adulte)</span></span><input type="number" id="kidf" min="0.2" max="1" step="0.1"></div>
-      <div class="field"><span>Midis en semaine <span class="hint">(sinon cantine / travail)</span></span><input type="checkbox" id="wklunch"></div>
+      <div class="field"><span>Midis en semaine à la maison toute l'année <span class="hint">(sinon cantine)</span></span><input type="checkbox" id="wklunch"></div>
+      <div class="field"><span>Midis à la maison pendant les vacances scolaires (zone C, Paris) et les jours fériés</span><input type="checkbox" id="hol"></div>
+      <div class="field"><span>Mercredi midi à la maison</span><input type="checkbox" id="wed"></div>
       <div class="field"><span>Menus de la semaine précédente autorisés : <b id="repv"></b></span><input type="range" id="rep" min="0" max="7"></div>
       <div class="field"><span>Éviter deux repas du même type d'affilée</span><input type="checkbox" id="vary"></div>
       <h3 style="margin-top:14px;font-size:18px" id="lasttitle">Semaine précédente</h3>
@@ -211,6 +225,15 @@ textarea{min-height:100px;resize:vertical}
   </div>
 </div>
 <div class="toast" id="toast"></div>
+<div class="ov" id="ov" hidden>
+  <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="edt">
+    <div class="row"><h2 id="edt"></h2><button class="ic" id="edx" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <input type="search" id="eds" placeholder="Chercher un plat de la bibliothèque" autocomplete="off">
+    <div class="edl" id="edl"></div>
+    <div class="inrow" style="margin:0"><input type="text" id="edf" placeholder="Ou un repas libre : restes, resto, pique-nique…" autocomplete="off"><button class="btn" id="edfb">Valider</button></div>
+    <button class="btn" id="edrm">Pas de repas à la maison</button>
+  </div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/firebase@10.14.1/firebase-app-compat.js"></script>
@@ -218,6 +241,7 @@ textarea{min-height:100px;resize:vertical}
 <script>
 {
 const DAYS=['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+const MABR=['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
 const MONTHS=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
 const R={fl:'Fruits & légumes',bp:'Boucherie & poisson',cr:'Crèmerie & œufs',ep:'Épicerie',bo:'Boulangerie',su:'Surgelés',di:'Divers'};
 const ORDER=['fl','bp','cr','bo','ep','su','di'];
@@ -253,7 +277,17 @@ const DEF=[
 
 const store={get(k,d){try{const v=localStorage.getItem('menus2.'+k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem('menus2.'+k,JSON.stringify(v))}catch(e){}}};
 let lib=store.get('lib',DEF);
-let S=Object.assign({adults:2,kids:2,kidf:.6,wklunch:false,rep:2,vary:true},store.get('settings',{}));
+let S=Object.assign({adults:2,kids:2,kidf:.6,wklunch:false,hol:true,wed:false,rep:2,vary:true},store.get('settings',{}));
+// Vacances scolaires zone C (Paris), jours sans classe inclus (veille de reprise comprise)
+const ZC=[['2025-10-18','2025-11-02','Toussaint'],['2025-12-20','2026-01-04','Noël'],['2026-02-21','2026-03-08','Hiver'],['2026-04-18','2026-05-03','Printemps'],['2026-05-14','2026-05-17','Pont de l\'Ascension'],['2026-07-04','2026-08-31','Été'],
+['2026-10-17','2026-11-01','Toussaint'],['2026-12-19','2027-01-03','Noël'],['2027-02-06','2027-02-21','Hiver'],['2027-04-03','2027-04-18','Printemps'],['2027-05-06','2027-05-09','Pont de l\'Ascension'],['2027-07-03','2027-08-31','Été']];
+const ymd=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+function easter(y){const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),da=((h+l-7*m+114)%31)+1;return new Date(y,mo-1,da)}
+const FERIES={};
+function feries(y){if(FERIES[y])return FERIES[y];const o={},e=easter(y),add=(d,n)=>{o[ymd(d)]=n};
+  [['01-01','Jour de l\'an'],['05-01','Fête du travail'],['05-08','8 mai'],['07-14','14 juillet'],['08-15','Assomption'],['11-01','Toussaint'],['11-11','11 novembre'],['12-25','Noël']].forEach(([md,n])=>o[y+'-'+md]=n);
+  const p=n=>{const x=new Date(e);x.setDate(x.getDate()+n);return x};add(p(1),'Lundi de Pâques');add(p(39),'Ascension');add(p(50),'Lundi de Pentecôte');return FERIES[y]=o}
+function dayInfo(d){const k=ymd(d),f=feries(d.getFullYear())[k];if(f)return {type:'ferie',label:f};const v=ZC.find(([a,b])=>k>=a&&k<=b);return v?{type:'vac',label:'Vacances · '+v[2]}:null}
 let weeks=store.get('weeks',{});
 let fresh=new Set();
 
@@ -264,7 +298,8 @@ const num=(x,d)=>x.toLocaleString('fr-FR',{maximumFractionDigits:d||0});
 const ICON={lock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
 open:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 7.5-2"/></svg>',
 roll:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/></svg>',
-x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg>'};
+x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg>',
+pen:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>'};
 
 /* ---------- calendrier / semaines ISO ---------- */
 function monday(d){const m=new Date(d.getFullYear(),d.getMonth(),d.getDate());m.setDate(m.getDate()-((m.getDay()+6)%7));return m}
@@ -274,11 +309,14 @@ function wkey(m){const i=iso(m);return i.y+'-W'+String(i.w).padStart(2,'0')}
 const TODAY=new Date();
 let cur=monday(TODAY);
 let calMonth=new Date(cur.getFullYear(),cur.getMonth(),1);
-function W(){const k=wkey(cur);return weeks[k]||(weeks[k]={plan:{},checked:[]})}
-function prevIds(){const p=weeks[wkey(addDays(cur,-7))];return p?Object.values(p.plan).map(x=>x.id):[]}
+function W(){const k=wkey(cur);const w=weeks[k]||(weeks[k]={plan:{},checked:[],on:{}});w.on=w.on||{};return w}
+function prevIds(){const p=weeks[wkey(addDays(cur,-7))];return p?Object.values(p.plan).map(x=>x.id).filter(Boolean):[]}
 function hasPlan(m){const w=weeks[wkey(m)];return w&&Object.keys(w.plan).length>0}
 
-function slots(){const out=[];DAYS.forEach((d,i)=>['midi','soir'].forEach(w=>{out.push({key:i+'-'+w,day:i,when:w,on:w==='soir'||i>=5||S.wklunch})}));return out}
+function slots(){const out=[],ov=(weeks[wkey(cur)]||{}).on||{};DAYS.forEach((d,i)=>{const info=dayInfo(addDays(cur,i));['midi','soir'].forEach(w=>{
+  const key=i+'-'+w,base=w==='soir'||i>=5||S.wklunch||(S.wed&&i===2)||(S.hol&&!!info);
+  out.push({key,day:i,when:w,base,on:key in ov?ov[key]:base})})});return out}
+const valid=p=>p&&(p.txt||byId(p.id));
 function factor(){return S.adults+S.kids*S.kidf}
 function saveLocal(){store.set('lib',lib);store.set('settings',S);store.set('weeks',weeks)}
 function save(){saveLocal();pushSoon()}
@@ -286,12 +324,12 @@ function pick(a){return a[Math.floor(Math.random()*a.length)]}
 
 function fill(onlyKey,silent){
   const plan=W().plan,last=prevIds(),act=slots().filter(s=>s.on),used=new Set();let reps=0;
-  const keeps=s=>{const p=plan[s.key];return p&&byId(p.id)&&(p.locked||(onlyKey&&s.key!==onlyKey))};
-  act.forEach(s=>{if(keeps(s)){used.add(plan[s.key].id);if(last.includes(plan[s.key].id))reps++}});
+  const keeps=s=>{const p=plan[s.key];return valid(p)&&(p.locked||(onlyKey&&s.key!==onlyKey))};
+  act.forEach(s=>{const p=plan[s.key];if(keeps(s)&&p.id){used.add(p.id);if(last.includes(p.id))reps++}});
   let prevType=null;
   act.forEach(s=>{
     const p=plan[s.key];
-    if(keeps(s)){prevType=byId(p.id).type;return}
+    if(keeps(s)){prevType=p.id?byId(p.id).type:null;return}
     let c=lib.filter(r=>!used.has(r.id));
     if(onlyKey&&p){const f=c.filter(r=>r.id!==p.id);if(f.length)c=f}
     if(reps>=S.rep){const f=c.filter(r=>!last.includes(r.id));if(f.length)c=f}
@@ -318,12 +356,14 @@ function renderHead(){
 }
 function renderWeek(){
   const plan=W().plan,last=prevIds(),sl=slots(),tk=TODAY.toDateString();
-  $('week').innerHTML=DAYS.map((d,i)=>{const dt=addDays(cur,i);return '<div class="day'+(dt.toDateString()===tk?' today':'')+'"><h3>'+d+'<small>'+dt.getDate()+' '+MONTHS[dt.getMonth()].slice(0,4).replace(/\.$/,'')+'</small></h3>'+sl.filter(s=>s.day===i).map(s=>{
-    if(!s.on)return '<div class="slot off">'+(s.when==='midi'?'Midi : cantine':'—')+'</div>';
-    const p=plan[s.key],r=p&&byId(p.id),lab=s.when==='midi'?'Midi':'Soir';
-    if(!r)return '<div class="slot"><span class="when">'+lab+'</span><span class="name" style="color:var(--soft)">À tirer</span><div class="row"><span></span><button class="ic" data-roll="'+s.key+'" aria-label="Tirer ce repas">'+ICON.roll+'</button></div></div>';
+  $('week').innerHTML=DAYS.map((d,i)=>{const dt=addDays(cur,i),info=dayInfo(dt);return '<div class="day'+(dt.toDateString()===tk?' today':'')+'"><h3>'+d+'<small>'+dt.getDate()+' '+MABR[dt.getMonth()]+'</small>'+(info?'<br><span class="hol">'+esc(info.label)+'</span>':'')+'</h3>'+sl.filter(s=>s.day===i).map(s=>{
+    const lab=s.when==='midi'?'Midi':'Soir',ed='<button class="ic" data-edit="'+s.key+'" aria-label="Choisir le repas à la main">'+ICON.pen+'</button>';
+    if(!s.on)return '<div class="slot off"><button data-add="'+s.key+'">'+(s.base?'Pas de repas · ajouter':(s.when==='midi'?'Midi : cantine · ajouter':'— · ajouter'))+'</button></div>';
+    const p=plan[s.key],r=p&&p.id&&byId(p.id);
+    if(p&&p.txt)return '<div class="slot"><span class="when">'+lab+'</span><span class="name">'+esc(p.txt)+'</span><span class="kc">repas libre</span><div class="row"><span class="tag t-libre">libre</span><span>'+ed+'<button class="ic" data-roll="'+s.key+'" aria-label="Tirer un plat à la place">'+ICON.roll+'</button></span></div></div>';
+    if(!r)return '<div class="slot"><span class="when">'+lab+'</span><span class="name" style="color:var(--soft)">À tirer</span><div class="row"><span></span><span>'+ed+'<button class="ic" data-roll="'+s.key+'" aria-label="Tirer ce repas">'+ICON.roll+'</button></span></div></div>';
     const n=mealNut(r);
-    return '<div class="slot'+(fresh.has(s.key)?' new':'')+'"><div class="row"><span class="when">'+lab+'</span>'+(last.includes(r.id)?'<span class="rep">déjà sorti</span>':'')+'</div><span class="name">'+esc(r.name)+'</span><span class="kc">≈ '+num(n.k)+' kcal · P '+num(n.p)+' g</span><div class="row"><span class="tag t-'+esc(r.type)+'">'+esc(r.type)+'</span><span><button class="ic'+(p.locked?' on':'')+'" data-lock="'+s.key+'" aria-label="'+(p.locked?'Déverrouiller':'Garder')+' ce repas">'+(p.locked?ICON.lock:ICON.open)+'</button><button class="ic" data-roll="'+s.key+'" aria-label="Retirer ce repas">'+ICON.roll+'</button></span></div></div>';
+    return '<div class="slot'+(fresh.has(s.key)?' new':'')+'"><div class="row"><span class="when">'+lab+'</span>'+(last.includes(r.id)?'<span class="rep">déjà sorti</span>':'')+'</div><span class="name">'+esc(r.name)+'</span><span class="kc">≈ '+num(n.k)+' kcal · P '+num(n.p)+' g</span><div class="row"><span class="tag t-'+esc(r.type)+'">'+esc(r.type)+'</span><span>'+ed+'<button class="ic'+(p.locked?' on':'')+'" data-lock="'+s.key+'" aria-label="'+(p.locked?'Déverrouiller':'Garder')+' ce repas">'+(p.locked?ICON.lock:ICON.open)+'</button><button class="ic" data-roll="'+s.key+'" aria-label="Retirer ce repas">'+ICON.roll+'</button></span></div></div>';
   }).join('')+'</div>'}).join('');
 }
 function fmt(q,u){
@@ -366,7 +406,7 @@ function renderCal(){
   $('cal').innerHTML='<tr><th>Sem.</th>'+['L','M','M','J','V','S','D'].map(d=>'<th>'+d+'</th>').join('')+'</tr>'+rows;
 }
 function renderSide(){
-  $('adults').value=S.adults;$('kids').value=S.kids;$('kidf').value=S.kidf;$('wklunch').checked=S.wklunch;$('rep').value=S.rep;$('repv').textContent=S.rep;$('vary').checked=S.vary;
+  $('adults').value=S.adults;$('kids').value=S.kids;$('kidf').value=S.kidf;$('wklunch').checked=S.wklunch;$('hol').checked=S.hol;$('wed').checked=S.wed;$('rep').value=S.rep;$('repv').textContent=S.rep;$('vary').checked=S.vary;
   const pm=addDays(cur,-7);$('lasttitle').textContent='Semaine précédente (S'+iso(pm).w+')';
   const ids=[...new Set(prevIds())];
   $('last').innerHTML=ids.length?ids.map(byId).filter(Boolean).map(r=>'<span class="chip" style="padding-right:12px">'+esc(r.name)+'</span>').join(''):'<span class="hint">Pas de menus tirés la semaine précédente.</span>';
@@ -438,13 +478,33 @@ const pickW=e=>{const tr=e.target.closest('tr[data-w]');if(tr){cur=monday(new Da
 $('cal').addEventListener('click',pickW);$('cal').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pickW(e)}});
 $('week').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
   if(b.dataset.lock){const p=W().plan[b.dataset.lock];if(p){p.locked=!p.locked;save();renderWeek()}}
-  if(b.dataset.roll)fill(b.dataset.roll)});
+  if(b.dataset.roll){const p=W().plan[b.dataset.roll];if(p&&p.txt)delete W().plan[b.dataset.roll];fill(b.dataset.roll)}
+  if(b.dataset.edit)openEd(b.dataset.edit);
+  if(b.dataset.add){W().on[b.dataset.add]=true;openEd(b.dataset.add)}});
+/* ---------- choix manuel (crayon) ---------- */
+let edKey=null,edBack=null;
+function openEd(key){edKey=key;edBack=document.activeElement;const [d,w]=key.split('-');
+  $('edt').textContent=DAYS[d]+' '+addDays(cur,+d).getDate()+' · '+(w==='midi'?'midi':'soir');$('eds').value='';$('edf').value='';listEd();$('ov').hidden=false;$('eds').focus()}
+function closeEd(){$('ov').hidden=true;const w=W();if(edKey&&w.on[edKey]&&!valid(w.plan[edKey])){const s=slots().find(x=>x.key===edKey);if(s&&!s.base)delete w.on[edKey]}edKey=null;save();render();if(edBack&&edBack.focus)try{edBack.focus()}catch(e){}}
+function listEd(){const q=$('eds').value.trim().toLowerCase();
+  $('edl').innerHTML=lib.filter(r=>!q||r.name.toLowerCase().includes(q)).sort((a,b)=>a.name.localeCompare(b.name,'fr')).map(r=>'<button data-pick="'+esc(r.id)+'"><span>'+esc(r.name)+'</span><span class="tag t-'+esc(r.type)+'">'+esc(r.type)+'</span></button>').join('')||'<p class="hint">Aucun plat trouvé.</p>'}
+function setSlot(v){const w=W(),k=edKey;if(v===null){w.on[k]=false;delete w.plan[k]}else{w.on[k]=true;w.plan[k]=v}w.checked=[];save();edKey=null;closeEd()}
+$('eds').addEventListener('input',listEd);
+$('edl').addEventListener('click',e=>{const b=e.target.closest('[data-pick]');if(b)setSlot({id:b.dataset.pick,locked:true})});
+$('edfb').addEventListener('click',()=>{const t=$('edf').value.trim();if(t)setSlot({txt:t,locked:true})});
+$('edf').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('edfb').click()}});
+$('edrm').addEventListener('click',()=>setSlot(null));
+$('edx').addEventListener('click',closeEd);
+$('ov').addEventListener('click',e=>{if(e.target===$('ov'))closeEd()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('ov').hidden)closeEd()});
 $('shop').addEventListener('change',e=>{const k=e.target.dataset.k;if(!k)return;const c=new Set(W().checked);e.target.checked?c.add(k):c.delete(k);W().checked=[...c];save()});
 $('copy').addEventListener('click',async()=>{const t='Courses semaine '+iso(cur).w+'\n\n'+shopping().map(x=>R[x.ry]+'\n'+x.items.map(a=>a.n+' : '+fmt(a.q,a.u)).join('\n')).join('\n\n');
   try{await navigator.clipboard.writeText(t);toast('Liste copiée')}catch(err){toast('Copie impossible ici')}});
 [['adults',v=>S.adults=Math.max(0,parseInt(v)||0)],['kids',v=>S.kids=Math.max(0,parseInt(v)||0)],['kidf',v=>S.kidf=Math.min(1,Math.max(.2,parseFloat(v)||.6))],['rep',v=>S.rep=parseInt(v)]]
   .forEach(([id,fn])=>$(id).addEventListener('input',e=>{fn(e.target.value);save();renderShop();renderHead();$('repv').textContent=S.rep}));
 $('wklunch').addEventListener('change',e=>{S.wklunch=e.target.checked;save();render()});
+$('hol').addEventListener('change',e=>{S.hol=e.target.checked;save();render()});
+$('wed').addEventListener('change',e=>{S.wed=e.target.checked;save();render()});
 $('vary').addEventListener('change',e=>{S.vary=e.target.checked;save()});
 $('lib').addEventListener('click',e=>{const b=e.target.closest('[data-del]');if(!b)return;if(lib.length<=1)return toast('Garde au moins un menu');
   const id=b.dataset.del;lib=lib.filter(r=>r.id!==id);Object.values(weeks).forEach(w=>Object.keys(w.plan).forEach(k=>{if(w.plan[k].id===id)delete w.plan[k]}));save();render()});

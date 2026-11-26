@@ -6,6 +6,9 @@ Petite appli web pour planifier les repas de la semaine et générer la liste de
 
 - Tirage aléatoire des menus à partir d'une bibliothèque de plats (soirs, midis du week-end, midis en semaine en option)
 - Cadenas pour garder un repas, relance d'un seul repas
+- Crayon pour choisir un repas à la main (plat de la bibliothèque, repas libre comme « Restes », ou pas de repas)
+- Vacances scolaires zone C (Paris) et jours fériés : midis à la maison automatiquement, badge sur les jours concernés (dates jusqu'à l'été 2027)
+- Option mercredi midi à la maison
 - Nombre réglable de menus de la semaine précédente autorisés à ressortir
 - Option pour éviter deux repas du même type (viande, poisson, végé) d'affilée
 - Calendrier avec numéros de semaine ISO, chaque semaine garde son planning
