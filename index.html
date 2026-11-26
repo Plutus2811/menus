@@ -284,6 +284,7 @@ textarea{min-height:100px;resize:vertical}
     <section class="panel">
       <h2 style="margin-bottom:8px">Bibliothèque de menus</h2>
       <div class="libc" id="count" aria-live="polite"></div>
+      <div id="libbk"></div>
       <div class="seg" id="libf" style="margin-top:12px" role="group" aria-label="Filtrer par auteur"></div>
       <div class="seg tagf" id="libt" style="margin-top:8px" role="group" aria-label="Filtrer par catégorie"></div>
       <div class="lib" id="lib"></div>
@@ -628,6 +629,8 @@ function renderSide(){
   $('count').innerHTML='<b>'+lib.length+'</b><span>recette'+(lib.length>1?'s':'')+'</span><span class="tag t-viande">'+ct('viande')+' viande</span><span class="tag t-poisson">'+ct('poisson')+' poisson</span><span class="tag t-végé">'+ct('végé')+' végé</span>'+(fv?'<span class="src">❤️ '+fv+'</span>':'')+(av?'<span class="src" style="color:var(--soft)">👎 '+av+'</span>':'');
   const nb=a=>lib.filter(r=>a==='ex'?!r.author:r.author===a).length;
   $('libf').innerHTML=[['all','Toutes ('+lib.length+')']].concat(HOUSE.members.map(m=>[m,m+' ('+nb(m)+')']),[['ex','Exemples ('+nb('ex')+')']]).map(([k,l])=>'<button data-f="'+esc(k)+'" aria-pressed="'+(LIBF===k)+'">'+esc(l)+'</button>').join('');
+  const bk=(store.get('libBackup',{recs:[]}).recs||[]).filter(r=>!lib.some(x=>x.id===r.id||(lc(x.name)===lc(r.name)&&x.author===r.author)));
+  $('libbk').innerHTML=bk.length?'<div style="margin-top:12px;padding:12px 14px;border-radius:12px;background:var(--wash);display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center"><span style="flex:1 1 260px"><b>'+bk.length+' recette'+(bk.length>1?'s':'')+'</b> présente'+(bk.length>1?'s':'')+' sur cet appareil mais absente'+(bk.length>1?'s':'')+' du foyer : '+esc(bk.slice(0,4).map(r=>r.name).join(', '))+(bk.length>4?'…':'')+'</span><button class="btn main" data-bk="restore">Les récupérer</button><button class="btn" data-bk="drop">Ignorer</button></div>':'';
   const tg=allTags();if(LIBT!=='all'&&LIBT!=='none'&&!tg.includes(LIBT))LIBT='all';
   const nt=lib.filter(r=>!(r.tags||[]).length).length;
   $('libt').innerHTML=[['all','Toutes catégories']].concat(tg.map(t=>[t,t+' ('+lib.filter(r=>(r.tags||[]).includes(t)).length+')']),nt?[['none','Sans catégorie ('+nt+')']]:[]).map(([k,l])=>'<button data-t="'+esc(k)+'" aria-pressed="'+(LIBT===k)+'">'+esc(l)+'</button>').join('');
@@ -834,6 +837,9 @@ $('maxT').addEventListener('change',e=>{S.maxT=parseInt(e.target.value)||0;save(
 $('season').addEventListener('change',e=>{S.season=e.target.checked;save()});
 $('rest').addEventListener('change',e=>{S.rest=e.target.checked;save()});
 $('me').addEventListener('click',e=>{const b=e.target.closest('[data-me]');if(!b)return;ME=ME===b.dataset.me?null:b.dataset.me;store.set('me',ME);renderMe();toast(ME?'Cet appareil est celui '+deN(ME):'Personne n\'est choisi sur cet appareil')});
+$('libbk').addEventListener('click',e=>{const b=e.target.closest('[data-bk]');if(!b)return;const bk=store.get('libBackup',{recs:[]}).recs||[];
+  if(b.dataset.bk==='restore'){let n=0;bk.forEach(r=>{if(!lib.some(x=>x.id===r.id||(lc(x.name)===lc(r.name)&&x.author===r.author))){lib.push(r);n++}});toast(n+' recette'+(n>1?'s':'')+' récupérée'+(n>1?'s':''))}
+  store.set('libBackup',{recs:[]});save();render()});
 $('libt').addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(!b)return;LIBT=b.dataset.t;renderSide()});
 $('libf').addEventListener('click',e=>{const b=e.target.closest('[data-f]');if(!b)return;LIBF=b.dataset.f;renderSide()});
 $('lib').addEventListener('click',e=>{const o=e.target.closest('[data-open]');if(o)return openRv(o.dataset.open);const b=e.target.closest('[data-del]');if(!b)return;if(lib.length<=1)return toast('Garde au moins un menu');
@@ -882,9 +888,10 @@ let db=null,foyer=store.get('foyer',null),unsub=null,synced={},pushT=null,stat=[
 try{if(window.firebase){firebase.initializeApp(FB);db=firebase.firestore()}}catch(e){db=null}
 function setStat(c,t){stat=[c,t];['sstat','hstat'].forEach(id=>{const e=$(id);e.className='pill '+c;e.textContent=t})}
 function fields(){const f={lib:JSON.stringify(lib),settings:JSON.stringify(S),house:JSON.stringify(HOUSE)};Object.keys(weeks).forEach(k=>{f['w_'+k]=JSON.stringify(weeks[k])});return f}
-function pushSoon(){if(!db||!foyer)return;clearTimeout(pushT);pushT=setTimeout(push,500)}
+let ready=false; // aucun envoi tant que la version du serveur n'a pas été reçue
+function pushSoon(){if(!db||!foyer||!ready)return;clearTimeout(pushT);pushT=setTimeout(push,500)}
 function push(){
-  if(!db||!foyer)return;const f=fields(),d={};
+  if(!db||!foyer||!ready)return;const f=fields(),d={};
   Object.keys(f).forEach(k=>{if(synced[k]!==f[k])d[k]=f[k]});if(!Object.keys(d).length)return;
   Object.keys(d).forEach(k=>synced[k]=d[k]);
   d.maj=firebase.firestore.FieldValue.serverTimestamp();
@@ -893,20 +900,22 @@ function push(){
 function applyRemote(data){
   let ch=false;
   Object.keys(data).forEach(k=>{const v=data[k];if(typeof v!=='string'||synced[k]===v)return;
-    try{const o=JSON.parse(v);if(k==='lib')lib=o;else if(k==='house')HOUSE=Object.assign({members:['David','Alex'],prices:{},ry:{},pantry:[],recur:[]},o);else if(k==='settings')S=Object.assign(S,o);else if(k.startsWith('w_'))weeks[k.slice(2)]=o;else return;synced[k]=v;ch=true}catch(e){}});
+    try{const o=JSON.parse(v);if(k==='lib'){const miss=lib.filter(r=>!o.some(x=>x.id===r.id));if(miss.length)store.set('libBackup',{at:Date.now(),recs:miss.concat(store.get('libBackup',{recs:[]}).recs.filter(r=>!miss.some(m=>m.id===r.id)))});lib=o}else if(k==='house')HOUSE=Object.assign({members:['David','Alex'],prices:{},ry:{},pantry:[],recur:[]},o);else if(k==='settings')S=Object.assign(S,o);else if(k.startsWith('w_'))weeks[k.slice(2)]=o;else return;synced[k]=v;ch=true}catch(e){}});
   if(ch){if(migrate())save();else saveLocal();render()}
 }
 function connect(){
   if(unsub){unsub();unsub=null}
+  ready=false;
   if(!db||!foyer){setStat(db?'off':'err',db?'Sur cet appareil':'Synchro indisponible');renderSync();return}
   setStat('off','Connexion…');renderSync();
   unsub=db.collection('foyers').doc(foyer).onSnapshot({includeMetadataChanges:true},snap=>{
     if(snap.exists&&!snap.metadata.hasPendingWrites)applyRemote(snap.data());
+    if(!snap.metadata.fromCache&&!ready){ready=true;push()}
     setStat(snap.metadata.fromCache?'off':'ok',snap.metadata.fromCache?'Hors connexion':'Synchronisé');
   },err=>setStat('err','Accès refusé ('+err.code+')'));
 }
 function genCode(){const a='abcdefghjkmnpqrstuvwxyz23456789',r=new Uint32Array(24);crypto.getRandomValues(r);return [...r].map(x=>a[x%a.length]).join('')}
-function createFoyer(){foyer=genCode();store.set('foyer',foyer);synced={};connect();push();toast('Foyer créé : envoie le lien d\'invitation')}
+function createFoyer(){foyer=genCode();store.set('foyer',foyer);synced={};connect();ready=true;push();toast('Foyer créé : envoie le lien d\'invitation')}
 async function joinFoyer(code){
   code=String(code||'').trim().toLowerCase().replace(/^.*#foyer-/,'');
   const msg=$('smsg');if(msg)msg.textContent='';
