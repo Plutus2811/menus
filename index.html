@@ -281,8 +281,8 @@ textarea{min-height:100px;resize:vertical}
 const DAYS=['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
 const MABR=['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
 const MONTHS=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
-const R={fl:'Fruits & légumes',bp:'Boucherie & poisson',cr:'Crèmerie & œufs',ep:'Épicerie',bo:'Boulangerie',su:'Surgelés',di:'Divers'};
-const ORDER=['fl','bp','cr','bo','ep','su','di'];
+const R={fl:'Fruits & légumes',bp:'Boucherie & poisson',cr:'Crèmerie & œufs',ep:'Épicerie',bo:'Boulangerie',su:'Surgelés',hy:'Hygiène & beauté',di:'Entretien & divers'};
+const ORDER=['fl','bp','cr','bo','ep','su','hy','di'];
 // valeurs indicatives pour 100 g : kcal, protéines, glucides, lipides, poids d'une pièce/tranche (g)
 const NUT={'spaghetti':[355,12,71,1.5],'pâtes':[355,12,71,1.5],'bœuf haché':[215,18,0,15],'sauce tomate':[50,1.5,8,1.5],'oignon':[40,1.1,9,.1,100],'parmesan':[390,33,0,28],
 'cuisse de poulet':[210,25,0,12,170],'pommes de terre':[80,2,17,.1],'salade':[15,1.3,2,.2,300],'pavé de saumon':[200,20,0,13,125],'riz':[350,7,78,.6],'brocoli':[34,2.8,7,.4],
@@ -433,7 +433,7 @@ function fmt(q,u){
   const n=Math.ceil(q-0.05);return n+' '+(u==='pièce'?(n>1?'pièces':'pièce'):(n>1?u+'s':u));
 }
 const lc=x=>String(x).trim().toLowerCase();
-function ryOf(n,d){const v=(HOUSE.ry||{})[lc(n)];return R[v]?v:(R[d]?d:guess(n))}
+function ryOf(n,d){const v=(HOUSE.ry||{})[lc(n)];if(R[v])return v;if(d==='di'&&guess(n)==='hy')return 'hy';return R[d]?d:guess(n)}
 function inPantry(n){return HOUSE.pantry.some(p=>lc(p)===lc(n))}
 function shopping(){
   const f=factor(),agg={},plan=W().plan,g={},hits=new Set();
@@ -492,11 +492,11 @@ function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');cle
 function goto(m){cur=monday(m);calMonth=new Date(cur.getFullYear(),cur.getMonth(),1);render()}
 
 /* ---------- saisie et import ---------- */
-const GUESS=[[/lessive|papier|savon|shampo|dentifrice|brosse|éponge|eponge|vaisselle|sacs?\b|essuie|sopalin|couche|lingette|javel|nettoy|coton|mouchoir|rasoir|déodorant|deodorant|douche|hygi|tampon|protège|serviette|pansement|solaire|aluminium|film|ampoule|piles?\b|adoucissant|désinfect|desinfect|wc\b/i,'di'],[/poulet|bœuf|boeuf|steak|jambon|lardon|saumon|cabillaud|poisson|dinde|porc|saucisse|thon|viande/i,'bp'],[/œuf|oeuf|lait|crème|creme|fromage|emmental|beurre|mozza|parmesan|yaourt/i,'cr'],[/pain|baguette/i,'bo'],[/surgel|frites/i,'su'],[/salade|oignon|ail|carotte|courgette|pomme|poivron|champignon|brocoli|épinard|légume|avocat|citron|tomate fraîche|fruit/i,'fl']];
+const GUESS=[[/papier toilette|papier wc|savon|shampo|apr[eè]s-shampo|dentifrice|brosse à dents|brosse a dents|fil dentaire|bain de bouche|coton|mouchoir|rasoir|mousse à raser|d[ée]odorant|douche|hygi|tampon|prot[eè]ge|serviettes? hygi|couches?\b|lingettes? b[ée]b[ée]|pansement|solaire|cr[eè]me (?:hydrat|main|visage|corps)|maquill|d[ée]maquill|parfum|vernis|cotons?-tiges?|tiges?\b/i,'hy'],[/lessive|papier|[ée]ponge|vaisselle|sacs?\b|essuie|sopalin|lingette|javel|nettoy|aluminium|\bfilm|ampoule|piles?\b|adoucissant|d[ée]sinfect|wc\b|brosse|allumette|bougie|insecticide|d[ée]tartr/i,'di'],[/poulet|bœuf|boeuf|steak|jambon|lardon|saumon|cabillaud|poisson|dinde|porc|saucisse|thon|viande/i,'bp'],[/œuf|oeuf|lait|crème|creme|fromage|emmental|beurre|mozza|parmesan|yaourt/i,'cr'],[/pain|baguette/i,'bo'],[/surgel|frites/i,'su'],[/salade|oignon|ail|carotte|courgette|pomme|poivron|champignon|brocoli|épinard|légume|avocat|citron|tomates?(?! concass| pel| s[eé]ch|s? concass)|fruit|banane|orange|poire|fraise|kiwi|raisin|cl[ée]mentine|concombre|courge|potiron|navet|poireau|chou|haricots verts|persil|basilic|herbes/i,'fl']];
 function guess(n){const g=GUESS.find(([re])=>re.test(n));return g?g[1]:'ep'}
 function rayon(t,n){t=String(t||'').toLowerCase();if(!t)return guess(n);
   if(/fruit|légume|legume|primeur/.test(t))return 'fl';if(/bouch|poisson|viande|charcut/.test(t))return 'bp';if(/crème|creme|frais|œuf|oeuf|laitier/.test(t))return 'cr';
-  if(/boulan|pain/.test(t))return 'bo';if(/surgel/.test(t))return 'su';if(/épic|epic/.test(t))return 'ep';return 'di'}
+  if(/hygi|beaut|toilette/.test(t))return 'hy';if(/boulan|pain/.test(t))return 'bo';if(/surgel/.test(t))return 'su';if(/épic|epic/.test(t))return 'ep';return 'di'}
 function unit(q,u){u=String(u||'pièce').toLowerCase().trim();
   if(u==='kg')return [q*1000,'g'];if(u==='l')return [q*1000,'ml'];if(u==='cl')return [q*10,'ml'];
   if(/^(pi|pc|u)/.test(u)||!u)return [q,'pièce'];if(/^tranche/.test(u))return [q,'tranche'];if(/^gousse/.test(u))return [q,'gousse'];
