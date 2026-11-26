@@ -618,6 +618,7 @@ const MXURL=p=>p.startsWith('q:')?'https://courses.monoprix.fr/search?q='+encode
 function prodOf(n){const u=(HOUSE.prod||{})[lc(n)];if(u&&(u.l||u.u))return {l:u.l||'',u:u.u||'',user:true};const m=MONO[lc(n)]||MONO[pk(n)];return m?{l:m[0],u:MXURL(m[1]),user:false}:null}
 const money=(x,d)=>x.toLocaleString('fr-FR',{style:'currency',currency:'EUR',minimumFractionDigits:d??2,maximumFractionDigits:d??2});
 const PALIAS={'saumon':'pavé de saumon','pavés de saumon':'pavé de saumon','filet de saumon':'pavé de saumon','filets de saumon':'pavé de saumon','saumon frais':'pavé de saumon','cabillaud':'dos de cabillaud','filet de cabillaud':'dos de cabillaud','oeuf':'œuf','oeufs':'œuf','œufs':'œuf','oignons':'oignon','carotte':'carottes','poireau':'poireaux','courgette':'courgettes','champignon':'champignons','champignons de paris':'champignons','viande hachée':'bœuf haché','boeuf haché':'bœuf haché','emmental rapé':'emmental râpé','gruyère râpé':'emmental râpé','fromage râpé':'emmental râpé','pomme de terre':'pommes de terre','patates':'pommes de terre','crème':'crème fraîche','jambon blanc':'jambon','jambon cuit':'jambon','tomate concassée':'tomates concassées','lait demi-écrémé':'lait','bouillon de légumes':'cube de bouillon','crème liquide':'crème fraîche'};
+const BOX={'thon':'boîte','maïs':'boîte','haricots rouges':'boîte','pois chiches':'boîte','tomates concassées':'boîte','lait de coco':'brique','petits pois carottes':'boîte','ratatouille':'boîte','flageolets':'boîte','sauce tomate':'pot','pesto':'pot','crème fraîche':'pot','fromage frais':'pot','lardons':'barquette','bœuf haché':'barquette','champignons':'barquette','crevettes':'barquette'};
 function pk(n){const k=lc(n);return PALIAS[k]||k}
 function pref(n){const u=(HOUSE.prices||{})[lc(n)];return u?{p:u,user:true}:PRICE[lc(n)]?{p:PRICE[lc(n)],user:false}:PRICE[pk(n)]?{p:PRICE[pk(n)],user:false}:null}
 function costQ(q,u,P){if(!P)return null;const [e,b]=P;if((u==='g'&&b==='kg')||(u==='ml'&&b==='l'))return q/1000*e;if(b==='u'&&!['g','ml'].includes(u))return Math.ceil(q-0.05)*e;return null}
@@ -650,7 +651,8 @@ function shopping(){SHOPIDX={};
   slots().filter(s=>s.on).forEach(s=>{const p=plan[s.key],r=p&&byId(p.id);if(!r)return;
     r.ing.forEach(([q,u,n0,ry])=>{if(inPantry(n0)){hits.add(lc(n0));return}const n=PALIAS[lc(n0)]||n0;if(n!==n0&&inPantry(n)){hits.add(lc(n));return}const k=n+'|'+u;agg[k]=agg[k]||{key:k,n,u,ry:ryOf(n,ry),q:0,src:'meal'};agg[k].q+=q*f})});
   Object.values(agg).forEach(a=>{if(a.u!=='g')return;const pc=agg[a.n+'|pièce'],w=pieceW(a.n);if(pc&&w){pc.q+=a.q/w;delete agg[a.key]}});
-  Object.values(agg).forEach(a=>{a.qt=fmt(a.q,a.u)});
+  Object.values(agg).forEach(a=>{a.qt=fmt(a.q,a.u);const pi=packInfo(a.n);
+    if(pi&&pi[1]!=='u'){const nn=BOX[pk(a.n)]||(a.u==='pièce'?'paquet':null);if(nn){const nb=a.u==='pièce'?Math.ceil(a.q-0.05):Math.max(1,Math.ceil(a.q/pi[0]-0.02));a.qt=(a.u==='pièce'?'':a.qt+' · ')+nb+' '+nn+(nb>1?'s':'')}}});
   const all=Object.values(agg).concat(HOUSE.recur.map(x=>({key:'r|'+x.n,n:x.n,qt:x.q||'',ry:ryOf(x.n,x.ry),src:'recur'})),
     W().extras.map((x,i)=>({key:'x|'+i+'|'+x.n,n:x.n,qt:'',ry:ryOf(x.n,x.ry),src:'extra',i})));
   all.forEach(a=>{(g[a.ry]=g[a.ry]||[]).push(a)});
