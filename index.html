@@ -11,6 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
+.pk{display:block;font-size:11px;font-weight:600;color:var(--soft);line-height:1.1}
 .lastw{display:flex;align-items:baseline;gap:8px 14px;flex-wrap:wrap;margin:14px 0 0;padding:12px 14px;border:1.5px solid var(--line);border-radius:16px;background:var(--card)}.lastw h3{margin:0;font-size:17px;white-space:nowrap}.lastw .last{flex:1 1 300px;margin:0}.lastw .chip{font:inherit;font-size:15px;border:0;color:inherit}
 [hidden]{display:none!important}
 /* VOICE: friendly family kitchen tool, warm and practical, no fuss
@@ -607,8 +608,12 @@ const money=(x,d)=>x.toLocaleString('fr-FR',{style:'currency',currency:'EUR',min
 function pref(n){const u=(HOUSE.prices||{})[lc(n)];return u?{p:u,user:true}:PRICE[lc(n)]?{p:PRICE[lc(n)],user:false}:null}
 function costQ(q,u,P){if(!P)return null;const [e,b]=P;if((u==='g'&&b==='kg')||(u==='ml'&&b==='l'))return q/1000*e;if(b==='u'&&!['g','ml'].includes(u))return Math.ceil(q-0.05)*e;return null}
 function parseQ(t){const m=/^\s*([\d.,]+)\s*(kg|g|l|cl|ml)?\b/i.exec(t||'');if(!m)return null;let q=parseFloat(m[1].replace(',','.')),u=(m[2]||'').toLowerCase();if(u==='kg'){q*=1000;u='g'}if(u==='l'){q*=1000;u='ml'}if(u==='cl'){q*=10;u='ml'}return {q,u:u||'pièce'}}
+// Conditionnements Monoprix (relevé du 26/11/2026) : [taille, unité g|ml|u, prix du paquet]
+const PACK={"potiron":[1000,"g",3.49],"haricots blancs":[500,"g",1.55],"vermicelles":[500,"g",2.09],"pois cassés":[500,"g",3.14],"chou vert":[500,"g",2.29],"navet":[500,"g",2.99],"spaghetti":[1000,"g",1.49],"pâtes":[1000,"g",1.65],"riz":[1000,"g",1.99],"riz arborio":[500,"g",3.35],"bœuf haché":[350,"g",6.49],"sauce tomate":[400,"ml",1.99],"carottes":[1500,"g",3.09],"ail":[10,"u",1.16,"tête"],"oignon":[10,"u",1.99,"filet 1 kg"],"huile d'olive":[1000,"ml",10.09],"parmesan":[60,"g",1.39],"cuisse de poulet":[2,"u",2.43],"pommes de terre":[1500,"g",1.49],"salade":[1,"u",1.69],"pavé de saumon":[2,"u",6.99],"citron":[4,"u",2.49],"brocoli":[500,"g",1.99],"beurre":[125,"g",1.85],"jambon":[4,"u",2.99],"crème fraîche":[500,"ml",2.15],"emmental râpé":[500,"g",4.39],"emmental":[500,"g",4.75],"lait":[1000,"ml",1.08],"œuf":[12,"u",3.55],"pâte brisée":[1,"u",0.75],"lardons":[200,"g",1.69],"haricots rouges":[500,"g",1.19],"maïs":[285,"g",0.79],"tomates concassées":[400,"g",1.19],"poivron":[3,"u",3.69],"pain de mie":[22,"u",1.09,"paquet 550 g"],"soupe de légumes":[1000,"ml",2.15],"poisson pané":[15,"u",3.19],"lentilles corail":[500,"g",2.78],"lait de coco":[200,"ml",1.09],"épinards":[600,"g",3.09],"tortillas":[8,"u",3.19],"blanc de poulet":[560,"g",9.34],"avocat":[4,"u",3.99],"ratatouille":[375,"g",0.89],"pain":[340,"g",1.65],"pâte à pizza":[1,"u",1.15],"mozzarella":[1,"u",1.05],"cube de bouillon":[18,"u",2.75,"boîte de 18"],"champignons":[230,"g",1.35],"dos de cabillaud":[3,"u",11.99],"courgettes":[1000,"g",2.49],"galettes de sarrasin":[6,"u",2.19],"légumes pour soupe":[1000,"g",3.79],"fromage frais":[240,"g",2.69],"steak haché":[2,"u",4.85],"frites":[810,"g",3.49],"veau":[400,"g",8.0],"bœuf à braiser":[400,"g",5.68],"vin rouge":[250,"ml",1.9],"vin blanc":[750,"ml",3.09],"crozets":[500,"g",4.19],"reblochon":[250,"g",5.39],"chipolatas":[6,"u",4.45],"escalope de dinde":[2,"u",4.34],"cordon bleu":[2,"u",2.09],"haricots verts":[1000,"g",2.45],"feuilles de lasagne":[500,"g",1.59],"farine":[1000,"g",1.09],"merguez":[6,"u",5.09],"semoule":[1000,"g",2.35],"pois chiches":[530,"g",1.55],"pain à burger":[4,"u",1.65],"cheddar":[12,"u",1.85],"saucisses fumées":[3,"u",8.65],"lentilles vertes":[500,"g",1.79],"sauce soja":[125,"ml",1.65],"sucre":[750,"g",1.65],"rôti de porc":[400,"g",6.0],"petits pois carottes":[530,"g",1.55],"concombre":[1,"u",1.99],"thon":[280,"g",4.95],"dos de colin":[2,"u",4.29],"moules":[1400,"g",8.99],"saumon fumé":[210,"g",7.95],"poireaux":[500,"g",3.99],"crevettes":[100,"g",1.99],"nouilles chinoises":[250,"g",1.55],"pesto":[190,"g",1.99],"tomates cerises":[400,"g",1.89],"aubergine":[500,"g",2.29],"gnocchis":[400,"g",1.55],"chou-fleur":[1000,"g",2.55],"petits pois":[1000,"g",1.79],"fruits":[1500,"g",3.99]};
+function packCost(n,q,u){const k=PACK[lc(n)];if(!k)return null;const [sz,pu,pp,pl]=k,ok=pu==='u'?!['g','ml'].includes(u):pu===u;if(!ok||!(q>0))return null;const nb=Math.max(1,Math.ceil(q/sz-0.02));
+  const lab=pl?pl:pu==='u'?(sz>1?'lot de '+sz:'1 pièce'):(sz>=1000?num(sz/1000,1)+(pu==='g'?' kg':' l'):sz+' '+pu);return {eur:nb*pp,pk:nb+' × '+lab}}
 function itemCost(a){
-  if(a.src==='meal'){const r=pref(a.n);return r?{eur:costQ(a.q,a.u,r.p),user:r.user}:{eur:null}}
+  if(a.src==='meal'){const r=pref(a.n);if(r&&r.user)return {eur:costQ(a.q,a.u,r.p),user:true};const pc=packCost(a.n,a.q,a.u);if(pc)return pc;return r?{eur:costQ(a.q,a.u,r.p),user:r.user}:{eur:null}}
   const x=a.src==='recur'?HOUSE.recur.find(y=>y.n===a.n):W().extras[a.i];if(!x)return {eur:null};
   if(x.p!=null)return {eur:x.p,user:true};
   if(a.src==='recur'){if(RECP[lc(x.n)]!=null)return {eur:RECP[lc(x.n)]};const pq=parseQ(x.q),r=pref(x.n);if(pq&&r)return {eur:costQ(pq.q,pq.u,r.p)}}
@@ -625,14 +630,14 @@ function shopping(){SHOPIDX={};
     W().extras.map((x,i)=>({key:'x|'+i+'|'+x.n,n:x.n,qt:'',ry:ryOf(x.n,x.ry),src:'extra',i})));
   all.forEach(a=>{(g[a.ry]=g[a.ry]||[]).push(a)});
   const groups=ORDER.filter(k=>g[k]).map(k=>({ry:k,items:g[k].sort((a,b)=>a.n.localeCompare(b.n,'fr'))}));
-  all.forEach(a=>{const c=itemCost(a);a.eur=c.eur;a.puser=c.user;SHOPIDX[a.key]=a});
+  all.forEach(a=>{const c=itemCost(a);a.eur=c.eur;a.puser=c.user;a.pk=c.pk;SHOPIDX[a.key]=a});
   groups.hits=hits;return groups;
 }
 const TAGI='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.5"/></svg>';
 const HOUSEI='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>';
 function renderShop(){
   const g=shopping(),ck=new Set(W().checked);
-  $('shop').innerHTML=g.length?g.map(x=>'<h4>'+R[x.ry]+'</h4>'+x.items.map(a=>'<div class="it"><button class="ic" data-ry="'+esc(a.n)+'" aria-label="Changer le rayon de '+esc(a.n)+'" title="Changer de rayon">'+TAGI+'</button><label><input type="checkbox" data-k="'+esc(a.key)+'"'+(ck.has(a.key)?' checked':'')+'><span>'+esc(a.n)+'</span><span class="q">'+esc(a.qt)+'</span></label>'+(()=>{const pd=prodOf(a.n);return pd&&pd.u?'<a class="mxl" href="'+esc(pd.u)+'" target="_blank" rel="noopener" title="'+esc(pd.l||'Voir sur Monoprix')+'" aria-label="'+esc(a.n)+' sur Monoprix">M</a>':''})()+'<button class="pr'+(a.eur==null?' no':'')+'" data-pr="'+esc(a.key)+'" title="Modifier le prix">'+(a.eur==null?'? €':money(a.eur))+'</button>'+
+  $('shop').innerHTML=g.length?g.map(x=>'<h4>'+R[x.ry]+'</h4>'+x.items.map(a=>'<div class="it"><button class="ic" data-ry="'+esc(a.n)+'" aria-label="Changer le rayon de '+esc(a.n)+'" title="Changer de rayon">'+TAGI+'</button><label><input type="checkbox" data-k="'+esc(a.key)+'"'+(ck.has(a.key)?' checked':'')+'><span>'+esc(a.n)+'</span><span class="q">'+esc(a.qt)+'</span></label>'+(()=>{const pd=prodOf(a.n);return pd&&pd.u?'<a class="mxl" href="'+esc(pd.u)+'" target="_blank" rel="noopener" title="'+esc(pd.l||'Voir sur Monoprix')+'" aria-label="'+esc(a.n)+' sur Monoprix">M</a>':''})()+'<button class="pr'+(a.eur==null?' no':'')+'" data-pr="'+esc(a.key)+'" title="'+(a.pk?'À acheter : '+esc(a.pk)+' · ':'')+'Modifier le prix">'+(a.pk?'<small class="pk">'+esc(a.pk)+'</small>':'')+(a.eur==null?'? €':money(a.eur))+'</button>'+
     (a.src==='meal'?'<button class="ic" data-pan="'+esc(a.n)+'" aria-label="'+esc(a.n)+' : déjà au placard" title="Déjà au placard">'+HOUSEI+'</button>':a.src==='recur'?'<span class="src" title="Courses de chaque semaine">chaque sem.</span>':'<button class="ic" data-xdel="'+a.i+'" aria-label="Retirer '+esc(a.n)+'">'+ICON.x+'</button>')+'</div>').join('')).join(''):'<p class="hint">Tire la semaine pour générer la liste.</p>';
   const pn=HOUSE.pantry.length,hn=g.hits.size;
   $('pansum').textContent='Déjà au placard ('+pn+')'+(hn?' · '+hn+' retiré'+(hn>1?'s':'')+' cette semaine':'');
@@ -653,7 +658,7 @@ function renderBud(){
   $('bry').innerHTML=ORDER.filter(k=>by[k]).map(k=>'<div class="bry"><span>'+R[k]+'</span><span class="trk"><span class="b" style="width:'+(by[k]/mx*100)+'%"></span></span><span class="v">'+money(by[k],0)+'</span></div>').join('');
   $('btarget').value=T||'';
   const m=HOUSE.members||[];
-  $('bnote').textContent=(m.length===2&&tot?'Partagé à deux : ≈ '+money(tot/2,0)+' chacun. ':'')+'Prix Monoprix relevés le 26/11/2026 (indicatifs pour les autres articles). Touche un prix pour l\'ajuster, ou le « M » pour ouvrir le produit sur Monoprix.'+(miss?' '+miss+' article'+(miss>1?'s':'')+' sans prix (« ? € »).':'');
+  $('bnote').textContent=(m.length===2&&tot?'Partagé à deux : ≈ '+money(tot/2,0)+' chacun. ':'')+'Prix Monoprix au paquet entier (relevés le 26/11/2026, indicatifs pour les autres articles) : un article déjà au placard (bouton maison) n\'est pas compté. Touche un prix pour l\'ajuster, ou le « M » pour ouvrir le produit sur Monoprix.'+(miss?' '+miss+' article'+(miss>1?'s':'')+' sans prix (« ? € »).':'');
 }
 function renderProd(){
   const q=lc($('pq').value||''),names=new Map();
