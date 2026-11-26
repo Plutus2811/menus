@@ -68,3 +68,4 @@ Une ligne par ingrédient, quantités pour 1 adulte. Laisser « Plat » vide pou
 | | | 3 | pièce | feuilles de lasagne | Épicerie | 350 | 12 | 70 | 1.5 | 20 |
 
 Les valeurs nutritionnelles fournies sont des ordres de grandeur, pas des données de référence.
+- Tour de cuisine : le prénom de qui cuisine s'affiche sur chaque jour ; la rotation change chaque mardi (David à partir du mardi 1er décembre 2026, puis Alex, etc.). Bouton « Inverser » dans les paramètres.

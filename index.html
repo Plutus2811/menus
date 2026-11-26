@@ -120,6 +120,7 @@ textarea{min-height:100px;resize:vertical}
 .code{font:600 15px/1.4 ui-monospace,Menlo,monospace;background:var(--wash);padding:10px 12px;border-radius:10px;overflow-wrap:anywhere;margin:8px 0 12px}
 .inrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 .inrow input{flex:1 1 200px;min-height:44px;padding:8px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);font-size:16px}
+.cook{display:inline-flex;align-items:center;gap:4px;font-family:Nunito,sans-serif;font-size:13px;font-weight:800;color:var(--mc);border:1.5px solid var(--mc);border-radius:99px;padding:0 8px 0 6px;margin-top:4px;white-space:nowrap;vertical-align:middle}.cook svg{width:14px;height:14px}
 .hol{display:inline-block;font-family:Nunito,sans-serif;font-size:12px;font-weight:700;color:var(--fish);background:light-dark(#e8f1fa,#1f2d3a);border-radius:99px;padding:1px 8px;margin-top:4px;white-space:nowrap}
 .slot.off button{all:unset;cursor:pointer;color:var(--soft);font-size:13px;text-align:center;padding:6px;border-radius:8px}
 .slot.off button:hover{color:var(--tomato-ink)}.slot.off button:focus-visible{outline:3px solid var(--tomato-ink)}
@@ -278,6 +279,7 @@ textarea{min-height:100px;resize:vertical}
       <div class="field"><span>Midis en semaine à la maison toute l'année <span class="hint">(sinon cantine)</span></span><input type="checkbox" id="wklunch"></div>
       <div class="field"><span>Midis à la maison pendant les vacances scolaires (zone C, Paris) et les jours fériés</span><input type="checkbox" id="hol"></div>
       <div class="field"><span>Mercredi midi à la maison</span><input type="checkbox" id="wed"></div>
+      <div class="field"><span>Tour de cuisine (change chaque mardi)<br><small class="hint" id="cookh" style="margin:0"></small></span><button class="btn" type="button" id="cooksw">Inverser</button></div>
       <div class="field"><span>Menus de la semaine précédente autorisés : <b id="repv"></b></span><input type="range" id="rep" min="0" max="7"></div>
       <div class="field"><span>Éviter deux repas du même type d'affilée</span><input type="checkbox" id="vary"></div>
       <h3 style="margin-top:16px;font-size:18px">Équilibre et contraintes</h3>
@@ -453,7 +455,7 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const byId=id=>lib.find(r=>r.id===id);
 const num=(x,d)=>x.toLocaleString('fr-FR',{maximumFractionDigits:d||0});
-const ICON={lock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
+const ICON={chef:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 14.5a4 4 0 0 1-.6-7.9 5 5 0 0 1 11.2 0A4 4 0 0 1 17 14.5V20H7z"/><path d="M7 17h10"/></svg>',lock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
 open:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 7.5-2"/></svg>',
 roll:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/></svg>',
 x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg>',
@@ -543,9 +545,11 @@ function renderHead(){
   $('wdates').textContent='du '+cur.getDate()+(cur.getMonth()!==end.getMonth()?' '+MONTHS[cur.getMonth()]:'')+' au '+end.getDate()+' '+MONTHS[end.getMonth()]+' '+end.getFullYear();
   $('who').textContent=S.adults+' adulte'+(S.adults>1?'s':'')+' et '+S.kids+' enfant'+(S.kids>1?'s':'')+' · quantités pour '+num(factor(),1)+' portions adulte par repas';
 }
+function cookOf(dt){const m=HOUSE.members||[];if(!m.length)return null;const c=HOUSE.cook||{from:'2026-12-01',first:0},a=new Date(c.from+'T12:00:00'),d=new Date(dt.getFullYear(),dt.getMonth(),dt.getDate(),12),n=Math.floor(Math.round((d-a)/864e5)/7);return m[(((n+c.first)%m.length)+m.length)%m.length]}
+function cookChip(dt){const c=cookOf(dt);return c?'<span class="cook" style="--mc:'+mcol(c)+'" title="'+esc(c)+' cuisine du mardi au lundi">'+ICON.chef+esc(c)+'</span>':''}
 function renderWeek(){
   const plan=W().plan,last=prevIds(),sl=slots(),tk=TODAY.toDateString();
-  $('week').innerHTML=DAYS.map((d,i)=>{const dt=addDays(cur,i),info=dayInfo(dt);return '<div class="day'+(dt.toDateString()===tk?' today':'')+'"><h3>'+d+'<small>'+dt.getDate()+' '+MABR[dt.getMonth()]+'</small>'+(info?'<br><span class="hol">'+esc(info.label)+'</span>':'')+'</h3>'+sl.filter(s=>s.day===i).map(s=>{
+  $('week').innerHTML=DAYS.map((d,i)=>{const dt=addDays(cur,i),info=dayInfo(dt);return '<div class="day'+(dt.toDateString()===tk?' today':'')+'"><h3>'+d+'<small>'+dt.getDate()+' '+MABR[dt.getMonth()]+'</small>'+'<br>'+cookChip(dt)+(info?' <span class="hol">'+esc(info.label)+'</span>':'')+'</h3>'+sl.filter(s=>s.day===i).map(s=>{
     const lab=s.when==='midi'?'Midi':'Soir',ed='<button class="ic" data-edit="'+s.key+'" aria-label="Choisir le repas à la main">'+ICON.pen+'</button>';
     if(!s.on)return s.base?'<div class="slot off"><button data-add="'+s.key+'">Pas de repas · ajouter</button></div>':'<div class="slot off">Cantine</div>';
     const p=plan[s.key],r=p&&p.id&&byId(p.id);
@@ -669,7 +673,7 @@ function renderCal(){
   $('cal').innerHTML='<tr><th>Sem.</th>'+['L','M','M','J','V','S','D'].map(d=>'<th>'+d+'</th>').join('')+'</tr>'+rows;
 }
 function renderSide(){
-  $('adults').value=S.adults;$('kids').value=S.kids;$('kidf').value=S.kidf;$('wklunch').checked=S.wklunch;$('hol').checked=S.hol;$('wed').checked=S.wed;$('rep').value=S.rep;$('repv').textContent=S.rep;$('vary').checked=S.vary;$('minF').value=S.minF;$('minV').value=S.minV;$('maxT').value=String(S.maxT);$('season').checked=S.season;$('rest').checked=S.rest;$('twice').checked=S.twice;
+  $('adults').value=S.adults;$('kids').value=S.kids;$('kidf').value=S.kidf;$('wklunch').checked=S.wklunch;$('hol').checked=S.hol;$('wed').checked=S.wed;{const t=new Date(TODAY),c=cookOf(t),dw=(t.getDay()+5)%7,nx=addDays(t,(7-dw)%7||7);$('cookh').textContent=c?'Cette semaine : '+c+' · dès le mardi '+nx.getDate()+' '+MABR[nx.getMonth()]+' : '+cookOf(nx):''}$('rep').value=S.rep;$('repv').textContent=S.rep;$('vary').checked=S.vary;$('minF').value=S.minF;$('minV').value=S.minV;$('maxT').value=String(S.maxT);$('season').checked=S.season;$('rest').checked=S.rest;$('twice').checked=S.twice;
   const pm=addDays(cur,-7);$('lasttitle').textContent='Semaine précédente (S'+iso(pm).w+')';
   const ids=[...new Set(prevIds())];
   $('last').innerHTML=ids.length?ids.map(byId).filter(Boolean).map(r=>'<span class="chip" style="padding-right:12px">'+esc(r.name)+'</span>').join(''):'<span class="hint">Pas de menus tirés la semaine précédente.</span>';
@@ -904,6 +908,7 @@ $('copy').addEventListener('click',async()=>{const t='Courses semaine '+iso(cur)
 $('wklunch').addEventListener('change',e=>{S.wklunch=e.target.checked;save();render()});
 $('hol').addEventListener('change',e=>{S.hol=e.target.checked;save();render()});
 $('wed').addEventListener('change',e=>{S.wed=e.target.checked;save();render()});
+$('cooksw').addEventListener('click',()=>{const c=HOUSE.cook||{from:'2026-12-01',first:0};HOUSE.cook={from:c.from,first:(c.first+1)%Math.max(1,HOUSE.members.length)};save();render()});
 $('vary').addEventListener('change',e=>{S.vary=e.target.checked;save()});
 $('minF').addEventListener('input',e=>{S.minF=Math.max(0,Math.min(7,parseInt(e.target.value)||0));save()});
 $('minV').addEventListener('input',e=>{S.minV=Math.max(0,Math.min(7,parseInt(e.target.value)||0));save()});
