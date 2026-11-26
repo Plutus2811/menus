@@ -43,7 +43,7 @@ button,select,input,textarea{font:inherit;color:inherit}
 .slot.off{background:transparent;border:1.5px dashed var(--line);color:var(--soft);justify-content:center;align-items:center;min-height:56px;font-size:13px}
 .slot .when{font-size:13px;color:var(--soft);font-weight:700}
 .slot .name{font-weight:700;line-height:1.25;flex:1}
-.slot .kc{font-size:13px;color:var(--soft);white-space:nowrap}
+.slot .kc{font-size:13px;color:var(--soft)}
 .slot>.row:last-child{flex-wrap:wrap;row-gap:2px}.slot>.row:last-child>span:last-child{display:flex;margin-left:auto}.slot .ic{width:34px;height:34px}
 #theme svg{width:20px;height:20px}
 .slot.new .name{animation:pop .35s ease}
@@ -127,6 +127,27 @@ textarea{min-height:100px;resize:vertical}
 .edl{overflow:auto;display:grid;gap:4px;min-height:120px;flex:1}
 .edl button{text-align:left;min-height:44px;border:0;border-radius:10px;background:var(--wash);padding:8px 12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:600}
 .edl button:hover,.edl button:focus-visible{outline:2px solid var(--tomato)}
+.slot button.nm{all:unset;cursor:pointer;font-weight:700;line-height:1.25;flex:1;display:block}
+.slot button.nm:hover{color:var(--tomato-ink);text-decoration:underline}.slot button.nm:focus-visible{outline:3px solid var(--tomato-ink);border-radius:4px}
+.chip button.nm{all:unset;cursor:pointer}.chip button.nm:hover{text-decoration:underline}.chip button.nm:focus-visible{outline:3px solid var(--tomato-ink)}
+.list .it{display:flex;align-items:center;gap:4px;border-bottom:1px solid var(--line)}
+.list .it label{flex:1;border:0}
+.list .it .ic{width:34px;height:34px;flex:none}
+.src{font-size:12px;font-weight:700;color:var(--fish);white-space:nowrap}
+.list details{margin-top:16px;border-top:1.5px solid var(--line);padding-top:10px}
+.list summary{cursor:pointer;font-weight:700;min-height:32px}
+.rec{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:6px 8px;align-items:center;padding:4px 0;border-bottom:1px solid var(--line)}
+.rec .q{color:var(--soft);white-space:nowrap}
+.rvd{overflow:auto}
+.rvd h3{font-size:19px;margin:12px 0 6px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;color:var(--soft);font-size:14px}
+.ingl{margin:0;padding:0;list-style:none}.ingl li{display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-bottom:1px solid var(--line)}
+.ingl li b{white-space:nowrap;font-variant-numeric:tabular-nums}
+.steps{margin:0;padding-left:22px}.steps li{padding:4px 0}
+.rvd label.f{display:grid;gap:4px;font-weight:700;font-size:14px}
+.rvd .g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.rvd textarea{min-height:120px}
+@media(max-width:600px){.rvd .g3{grid-template-columns:minmax(0,1fr)}}
 .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:12px;font-weight:700;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.show{opacity:1}
 @media(max-width:1100px){.week{grid-template-columns:repeat(4,minmax(0,1fr))}}
@@ -158,10 +179,20 @@ textarea{min-height:100px;resize:vertical}
 
 <div class="band">
   <div class="cols">
+    <div class="stackc">
     <section class="panel list">
       <div class="row"><h2>Liste de courses</h2><button class="btn" id="copy">Copier</button></div>
+      <form class="inrow" id="xadd" style="margin:0 0 6px"><input type="text" id="xin" placeholder="Ajouter un article : lessive, café…" autocomplete="off"><button class="btn" type="submit">Ajouter</button></form>
       <div id="shop"></div>
+      <details id="pan"><summary id="pansum"></summary><p class="hint" style="margin:4px 0 8px">Ces ingrédients sont retirés de la liste tant qu'ils sont ici. Clique sur la maison d'un article pour l'y ajouter.</p><div class="lib" id="panl" style="margin:0"></div></details>
     </section>
+    <section class="panel">
+      <h2>Courses de chaque semaine</h2>
+      <p class="hint" style="margin:-6px 0 8px">Petit-déjeuners, goûters, produits du quotidien : ajoutés automatiquement à la liste de chaque semaine.</p>
+      <div id="recl"></div>
+      <form class="inrow" id="radd"><input type="text" id="rn" placeholder="Article (ex : céréales)" autocomplete="off" required><input type="text" id="rq" placeholder="Quantité (ex : 2 paquets)" autocomplete="off" style="flex:1 1 140px"><button class="btn" type="submit">Ajouter</button></form>
+    </section>
+    </div>
     <div class="stackc">
       <section class="panel">
         <h2>Apports nutritionnels</h2>
@@ -214,7 +245,7 @@ textarea{min-height:100px;resize:vertical}
       </form>
       <div class="imp">
         <h3 style="font-size:20px">Importer depuis un fichier .ods</h3>
-        <p class="hint" style="margin:4px 0 8px">Une ligne par ingrédient, quantités pour 1 adulte. Laisse « Plat » vide pour continuer le plat du dessus. Les colonnes nutritionnelles (pour 100 g) sont facultatives. Fonctionne aussi avec .xlsx et .csv.</p>
+        <p class="hint" style="margin:4px 0 8px">Une ligne par ingrédient, quantités pour 1 adulte. Laisse « Plat » vide pour continuer le plat du dessus. Les colonnes nutritionnelles (pour 100 g) sont facultatives, comme Préparation (min), Cuisson (min), Lien et Étapes (séparées par « ; »), à remplir sur la ligne du plat. Fonctionne aussi avec .xlsx et .csv.</p>
         <div class="scroll"><table class="ex"><tr><th>Plat</th><th>Type</th><th>Quantité</th><th>Unité</th><th>Ingrédient</th><th>Rayon</th><th>kcal</th><th>Protéines</th><th>Glucides</th><th>Lipides</th><th>g/pièce</th></tr>
         <tr><td>Lasagnes</td><td>viande</td><td>100</td><td>g</td><td>bœuf haché</td><td>Boucherie</td><td></td><td></td><td></td><td></td><td></td></tr>
         <tr><td></td><td></td><td>3</td><td>pièce</td><td>feuilles de lasagne</td><td>Épicerie</td><td>350</td><td>12</td><td>70</td><td>1.5</td><td>20</td></tr></table></div>
@@ -227,6 +258,7 @@ textarea{min-height:100px;resize:vertical}
   </div>
 </div>
 <div class="toast" id="toast"></div>
+<div class="ov" id="rv" hidden><div class="dlg rvd" role="dialog" aria-modal="true" aria-labelledby="rvt" id="rvb"></div></div>
 <div class="ov" id="ov" hidden>
   <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="edt">
     <div class="row"><h2 id="edt"></h2><button class="ic" id="edx" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
@@ -276,9 +308,31 @@ const DEF=[
 ['Soupe de légumes et tartines','végé',[[300,'g','légumes pour soupe','fl'],[60,'g','pain','bo'],[30,'g','fromage frais','cr']]],
 ['Steak haché, frites, salade','viande',[[1,'pièce','steak haché','bp'],[150,'g','frites','su'],[.25,'pièce','salade','fl']]]
 ].map((r,i)=>({id:'d'+i,name:r[0],type:r[1],ing:r[2]}));
+const STEPS=[
+[10,30,["Émincer l'oignon et le faire revenir dans un peu d'huile.","Ajouter le bœuf haché et le faire dorer en l'émiettant.","Verser la sauce tomate, saler, poivrer et laisser mijoter 20 min.","Cuire les spaghetti, égoutter et servir avec la sauce et le parmesan."]],
+[10,50,["Préchauffer le four à 200 °C.","Couper les pommes de terre en quartiers et les mettre dans un plat avec les cuisses de poulet, un filet d'huile, sel, poivre et herbes.","Enfourner 45 à 50 min en retournant à mi-cuisson.","Servir avec la salade."]],
+[10,20,["Cuire le riz selon le paquet.","Cuire les brocolis 8 min à la vapeur ou dans l'eau bouillante salée.","Cuire les pavés de saumon 4 min de chaque côté à la poêle, côté peau d'abord.","Servir avec un filet de citron."]],
+[10,25,["Préchauffer le four à 200 °C et cuire les pâtes un peu fermes.","Couper le jambon en dés et le mélanger aux pâtes avec la crème.","Verser dans un plat et couvrir d'emmental.","Gratiner 15 min."]],
+[15,35,["Préchauffer le four à 180 °C et étaler la pâte dans un moule.","Faire revenir les lardons sans matière grasse et les répartir sur la pâte.","Battre les œufs avec la crème, poivrer et verser sur les lardons.","Cuire 35 min et servir avec la salade."]],
+[10,25,["Faire revenir l'oignon émincé.","Ajouter les tomates concassées, les haricots rouges égouttés et le maïs, avec du cumin et du paprika.","Laisser mijoter 20 min.","Servir avec le riz."]],
+[10,10,["Préchauffer le four à 220 °C.","Garnir le pain de mie de jambon et d'emmental.","Cuire 8 à 10 min jusqu'à ce que ce soit doré.","Faire chauffer la soupe et servir ensemble."]],
+[10,20,["Cuire les pommes de terre épluchées 20 min dans l'eau salée.","Les écraser avec le lait chaud et une noix de beurre.","Cuire le poisson pané à la poêle ou au four selon le paquet."]],
+[10,25,["Rincer les lentilles corail.","Les cuire 15 min dans le lait de coco allongé d'un verre d'eau, avec 1 cuillère à café de curry.","Ajouter les épinards en fin de cuisson.","Servir avec le riz."]],
+[15,10,["Couper le poulet et le poivron en lanières.","Les faire sauter 8 min avec des épices à tacos.","Écraser l'avocat avec un peu de citron et de sel.","Garnir les tortillas chaudes de poulet, d'avocat et de fromage."]],
+[5,10,["Réchauffer la ratatouille.","Battre les œufs, saler et poivrer.","Cuire l'omelette à la poêle et servir avec la ratatouille et le pain."]],
+[15,15,["Préchauffer le four à 240 °C.","Étaler la pâte et la couvrir de sauce tomate.","Ajouter le jambon et la mozzarella en tranches.","Cuire 12 à 15 min."]],
+[20,25,["Cuire les pommes de terre 20 min et les écraser en purée avec le lait.","Faire revenir le bœuf haché.","Dans un plat, étaler la viande, puis la purée et l'emmental.","Gratiner 20 min à 200 °C."]],
+[10,25,["Émincer les champignons et les faire revenir.","Nacrer le riz 2 min dans un peu d'huile.","Ajouter le bouillon chaud louche par louche en remuant, pendant 18 min.","Hors du feu, ajouter le parmesan et les champignons."]],
+[10,15,["Couper les courgettes et les pommes de terre en morceaux.","Cuire les pommes de terre 15 min à la vapeur, avec les courgettes les 8 dernières minutes.","Cuire le cabillaud 8 min à la vapeur ou en papillote.","Servir avec un filet d'huile d'olive et de citron."]],
+[5,10,["Chauffer une poêle et y poser la galette.","Casser l'œuf au centre, ajouter le jambon et l'emmental autour.","Laisser cuire jusqu'à ce que le blanc soit pris, puis replier les bords."]],
+[15,25,["Éplucher et couper les légumes.","Les cuire 25 min dans de l'eau salée à hauteur.","Mixer.","Servir avec des tartines de fromage frais."]],
+[5,20,["Cuire les frites au four selon le paquet.","Cuire les steaks hachés 3 à 4 min de chaque côté.","Servir avec la salade."]]];
+DEF.forEach((r,i)=>{const t=STEPS[i];if(t){r.prep=t[0];r.cook=t[1];r.steps=t[2]}});
+function migrate(){let ch=false;lib.forEach(r=>{const m=/^d(\d+)$/.exec(r.id);const t=m&&STEPS[+m[1]];if(t&&!r.steps&&DEF[+m[1]].name===r.name){r.prep=t[0];r.cook=t[1];r.steps=t[2];ch=true}});return ch}
 
 const store={get(k,d){try{const v=localStorage.getItem('menus2.'+k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem('menus2.'+k,JSON.stringify(v))}catch(e){}}};
 let lib=store.get('lib',DEF);
+let HOUSE=Object.assign({pantry:[],recur:[{n:'lait',q:'4 l',ry:'cr'},{n:'céréales',q:'1 paquet',ry:'ep'},{n:'compotes',q:'12',ry:'ep'},{n:'biscuits pour le goûter',q:'2 paquets',ry:'ep'},{n:'fruits',q:'2 kg',ry:'fl'}]},store.get('house',{}));
 let S=Object.assign({adults:2,kids:2,kidf:.6,wklunch:false,hol:true,wed:false,rep:2,vary:true},store.get('settings',{}));
 // Vacances scolaires zone C (Paris), jours sans classe inclus (veille de reprise comprise)
 const ZC=[['2025-10-18','2025-11-02','Toussaint'],['2025-12-20','2026-01-04','Noël'],['2026-02-21','2026-03-08','Hiver'],['2026-04-18','2026-05-03','Printemps'],['2026-05-14','2026-05-17','Pont de l\'Ascension'],['2026-07-04','2026-08-31','Été'],
@@ -311,7 +365,7 @@ function wkey(m){const i=iso(m);return i.y+'-W'+String(i.w).padStart(2,'0')}
 const TODAY=new Date();
 let cur=monday(TODAY);
 let calMonth=new Date(cur.getFullYear(),cur.getMonth(),1);
-function W(){const k=wkey(cur);const w=weeks[k]||(weeks[k]={plan:{},checked:[],on:{}});w.on=w.on||{};return w}
+function W(){const k=wkey(cur);const w=weeks[k]||(weeks[k]={plan:{},checked:[],on:{},extras:[]});w.on=w.on||{};w.extras=w.extras||[];return w}
 function prevIds(){const p=weeks[wkey(addDays(cur,-7))];return p?Object.values(p.plan).map(x=>x.id).filter(Boolean):[]}
 function hasPlan(m){const w=weeks[wkey(m)];return w&&Object.keys(w.plan).length>0}
 
@@ -320,7 +374,7 @@ function slots(){const out=[],ov=(weeks[wkey(cur)]||{}).on||{};DAYS.forEach((d,i
   out.push({key,day:i,when:w,base,on:key in ov?ov[key]:base})})});return out}
 const valid=p=>p&&(p.txt||byId(p.id));
 function factor(){return S.adults+S.kids*S.kidf}
-function saveLocal(){store.set('lib',lib);store.set('settings',S);store.set('weeks',weeks)}
+function saveLocal(){store.set('lib',lib);store.set('settings',S);store.set('weeks',weeks);store.set('house',HOUSE)}
 function save(){saveLocal();pushSoon()}
 function pick(a){return a[Math.floor(Math.random()*a.length)]}
 
@@ -365,7 +419,7 @@ function renderWeek(){
     if(p&&p.txt)return '<div class="slot"><span class="when">'+lab+'</span><span class="name">'+esc(p.txt)+'</span><span class="kc">repas libre</span><div class="row"><span class="tag t-libre">libre</span><span>'+ed+'<button class="ic" data-roll="'+s.key+'" aria-label="Tirer un plat à la place">'+ICON.roll+'</button></span></div></div>';
     if(!r)return '<div class="slot"><span class="when">'+lab+'</span><span class="name" style="color:var(--soft)">À tirer</span><div class="row"><span></span><span>'+ed+'<button class="ic" data-roll="'+s.key+'" aria-label="Tirer ce repas">'+ICON.roll+'</button></span></div></div>';
     const n=mealNut(r);
-    return '<div class="slot'+(fresh.has(s.key)?' new':'')+'"><div class="row"><span class="when">'+lab+'</span>'+(last.includes(r.id)?'<span class="rep">déjà sorti</span>':'')+'</div><span class="name">'+esc(r.name)+'</span><span class="kc">≈ '+num(n.k)+' kcal · P '+num(n.p)+' g</span><div class="row"><span class="tag t-'+esc(r.type)+'">'+esc(r.type)+'</span><span>'+ed+'<button class="ic'+(p.locked?' on':'')+'" data-lock="'+s.key+'" aria-label="'+(p.locked?'Déverrouiller':'Garder')+' ce repas">'+(p.locked?ICON.lock:ICON.open)+'</button><button class="ic" data-roll="'+s.key+'" aria-label="Retirer ce repas">'+ICON.roll+'</button></span></div></div>';
+    return '<div class="slot'+(fresh.has(s.key)?' new':'')+'"><div class="row"><span class="when">'+lab+'</span>'+(last.includes(r.id)?'<span class="rep">déjà sorti</span>':'')+'</div><button class="nm" data-open="'+esc(r.id)+'">'+esc(r.name)+'</button><span class="kc">≈ '+num(n.k)+' kcal · P '+num(n.p)+' g'+(r.prep||r.cook?' · '+((+r.prep||0)+(+r.cook||0))+' min':'')+'</span><div class="row"><span class="tag t-'+esc(r.type)+'">'+esc(r.type)+'</span><span>'+ed+'<button class="ic'+(p.locked?' on':'')+'" data-lock="'+s.key+'" aria-label="'+(p.locked?'Déverrouiller':'Garder')+' ce repas">'+(p.locked?ICON.lock:ICON.open)+'</button><button class="ic" data-roll="'+s.key+'" aria-label="Retirer ce repas">'+ICON.roll+'</button></span></div></div>';
   }).join('')+'</div>'}).join('');
 }
 function fmt(q,u){
@@ -374,16 +428,28 @@ function fmt(q,u){
   if(u==='ml')return q>=1000?big(q,'l'):Math.ceil(q/10)*10+' ml';
   const n=Math.ceil(q-0.05);return n+' '+(u==='pièce'?(n>1?'pièces':'pièce'):(n>1?u+'s':u));
 }
+const lc=x=>String(x).trim().toLowerCase();
+function inPantry(n){return HOUSE.pantry.some(p=>lc(p)===lc(n))}
 function shopping(){
-  const f=factor(),agg={},plan=W().plan;
+  const f=factor(),agg={},plan=W().plan,g={},hits=new Set();
   slots().filter(s=>s.on).forEach(s=>{const p=plan[s.key],r=p&&byId(p.id);if(!r)return;
-    r.ing.forEach(([q,u,n,ry])=>{const k=n+'|'+u;agg[k]=agg[k]||{n,u,ry:R[ry]?ry:'di',q:0};agg[k].q+=q*f})});
-  const g={};Object.values(agg).forEach(a=>{(g[a.ry]=g[a.ry]||[]).push(a)});
-  return ORDER.filter(k=>g[k]).map(k=>({ry:k,items:g[k].sort((a,b)=>a.n.localeCompare(b.n,'fr'))}));
+    r.ing.forEach(([q,u,n,ry])=>{if(inPantry(n)){hits.add(lc(n));return}const k=n+'|'+u;agg[k]=agg[k]||{key:k,n,u,ry:R[ry]?ry:'di',q:0,src:'meal'};agg[k].q+=q*f})});
+  Object.values(agg).forEach(a=>{a.qt=fmt(a.q,a.u)});
+  const all=Object.values(agg).concat(HOUSE.recur.map(x=>({key:'r|'+x.n,n:x.n,qt:x.q||'',ry:R[x.ry]?x.ry:guess(x.n),src:'recur'})),
+    W().extras.map((x,i)=>({key:'x|'+i+'|'+x.n,n:x.n,qt:'',ry:R[x.ry]?x.ry:guess(x.n),src:'extra',i})));
+  all.forEach(a=>{(g[a.ry]=g[a.ry]||[]).push(a)});
+  const groups=ORDER.filter(k=>g[k]).map(k=>({ry:k,items:g[k].sort((a,b)=>a.n.localeCompare(b.n,'fr'))}));
+  groups.hits=hits;return groups;
 }
+const HOUSEI='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>';
 function renderShop(){
   const g=shopping(),ck=new Set(W().checked);
-  $('shop').innerHTML=g.length?g.map(x=>'<h4>'+R[x.ry]+'</h4>'+x.items.map(a=>{const k=a.n+'|'+a.u;return '<label><input type="checkbox" data-k="'+esc(k)+'"'+(ck.has(k)?' checked':'')+'><span>'+esc(a.n)+'</span><span class="q">'+fmt(a.q,a.u)+'</span></label>'}).join('')).join(''):'<p class="hint">Tire la semaine pour générer la liste.</p>';
+  $('shop').innerHTML=g.length?g.map(x=>'<h4>'+R[x.ry]+'</h4>'+x.items.map(a=>'<div class="it"><label><input type="checkbox" data-k="'+esc(a.key)+'"'+(ck.has(a.key)?' checked':'')+'><span>'+esc(a.n)+'</span><span class="q">'+esc(a.qt)+'</span></label>'+
+    (a.src==='meal'?'<button class="ic" data-pan="'+esc(a.n)+'" aria-label="'+esc(a.n)+' : déjà au placard" title="Déjà au placard">'+HOUSEI+'</button>':a.src==='recur'?'<span class="src" title="Courses de chaque semaine">chaque sem.</span>':'<button class="ic" data-xdel="'+a.i+'" aria-label="Retirer '+esc(a.n)+'">'+ICON.x+'</button>')+'</div>').join('')).join(''):'<p class="hint">Tire la semaine pour générer la liste.</p>';
+  const pn=HOUSE.pantry.length,hn=g.hits.size;
+  $('pansum').textContent='Déjà au placard ('+pn+')'+(hn?' · '+hn+' retiré'+(hn>1?'s':'')+' cette semaine':'');
+  $('panl').innerHTML=pn?HOUSE.pantry.slice().sort((a,b)=>a.localeCompare(b,'fr')).map(n=>'<span class="chip"'+(g.hits.has(lc(n))?' style="outline:2px solid var(--basil)"':'')+'>'+esc(n)+'<button class="ic" data-unpan="'+esc(n)+'" aria-label="Remettre '+esc(n)+' dans la liste">'+ICON.x+'</button></span>').join(''):'<span class="hint">Rien pour l\'instant.</span>';
+  $('recl').innerHTML=HOUSE.recur.length?HOUSE.recur.map((x,i)=>'<div class="rec"><span>'+esc(x.n)+'</span><span class="q">'+esc(x.q||'')+'</span><button class="ic" data-rdel="'+i+'" aria-label="Retirer '+esc(x.n)+'">'+ICON.x+'</button></div>').join(''):'<p class="hint">Aucun article récurrent.</p>';
 }
 function renderNut(){
   const plan=W().plan,meals=slots().filter(s=>s.on).map(s=>plan[s.key]&&byId(plan[s.key].id)).filter(Boolean);
@@ -413,14 +479,14 @@ function renderSide(){
   const ids=[...new Set(prevIds())];
   $('last').innerHTML=ids.length?ids.map(byId).filter(Boolean).map(r=>'<span class="chip" style="padding-right:12px">'+esc(r.name)+'</span>').join(''):'<span class="hint">Pas de menus tirés la semaine précédente.</span>';
   $('count').textContent='('+lib.length+')';
-  $('lib').innerHTML=lib.map(r=>'<span class="chip"><span class="t-'+esc(r.type)+'">●</span>'+esc(r.name)+'<button class="ic" data-del="'+esc(r.id)+'" aria-label="Supprimer '+esc(r.name)+'">'+ICON.x+'</button></span>').join('');
+  $('lib').innerHTML=lib.map(r=>'<span class="chip"><span class="t-'+esc(r.type)+'">●</span><button class="nm" data-open="'+esc(r.id)+'">'+esc(r.name)+'</button><button class="ic" data-del="'+esc(r.id)+'" aria-label="Supprimer '+esc(r.name)+'">'+ICON.x+'</button></span>').join('');
 }
 function render(){renderHead();renderWeek();renderShop();renderNut();renderCal();renderSide()}
 function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('show'),2000)}
 function goto(m){cur=monday(m);calMonth=new Date(cur.getFullYear(),cur.getMonth(),1);render()}
 
 /* ---------- saisie et import ---------- */
-const GUESS=[[/poulet|bœuf|boeuf|steak|jambon|lardon|saumon|cabillaud|poisson|dinde|porc|saucisse|thon|viande/i,'bp'],[/œuf|oeuf|lait|crème|creme|fromage|emmental|beurre|mozza|parmesan|yaourt/i,'cr'],[/pain|baguette/i,'bo'],[/surgel|frites/i,'su'],[/salade|oignon|ail|carotte|courgette|pomme|poivron|champignon|brocoli|épinard|légume|avocat|citron|tomate fraîche|fruit/i,'fl']];
+const GUESS=[[/lessive|papier|savon|shampo|dentifrice|éponge|eponge|vaisselle|sacs?\b|essuie|couche|lingette|javel|nettoy/i,'di'],[/poulet|bœuf|boeuf|steak|jambon|lardon|saumon|cabillaud|poisson|dinde|porc|saucisse|thon|viande/i,'bp'],[/œuf|oeuf|lait|crème|creme|fromage|emmental|beurre|mozza|parmesan|yaourt/i,'cr'],[/pain|baguette/i,'bo'],[/surgel|frites/i,'su'],[/salade|oignon|ail|carotte|courgette|pomme|poivron|champignon|brocoli|épinard|légume|avocat|citron|tomate fraîche|fruit/i,'fl']];
 function guess(n){const g=GUESS.find(([re])=>re.test(n));return g?g[1]:'ep'}
 function rayon(t,n){t=String(t||'').toLowerCase();if(!t)return guess(n);
   if(/fruit|légume|legume|primeur/.test(t))return 'fl';if(/bouch|poisson|viande|charcut/.test(t))return 'bp';if(/crème|creme|frais|œuf|oeuf|laitier/.test(t))return 'cr';
@@ -440,11 +506,16 @@ function importRows(rows){
   const find=(re,d)=>{const i=h.findIndex(c=>re.test(c));return i>=0?i:d};
   const hasHead=h.some(c=>/plat|menu|recette|ingredient/.test(c));
   const C={plat:find(/plat|menu|recette/,0),type:find(/type|cat/,1),q:find(/quant|qte|qt/,2),u:find(/unit/,3),n:find(/ingred|produit|aliment/,4),r:find(/rayon/,5),
-    k:find(/kcal|calor|energ/,6),p:find(/prot/,7),g:find(/gluc|carb/,8),l:find(/lipid|gras/,9),w:find(/piece|poids/,10)};
+    k:find(/kcal|calor|energ/,6),p:find(/prot/,7),g:find(/gluc|carb/,8),l:find(/lipid|gras/,9),w:find(/piece|poids/,10),prep:find(/prep|temps/,-1),cook:find(/cuisson/,-1),url:find(/lien|url|source/,-1),st:find(/etape|instruction/,-1)};
   const out=[];let curR=null;
   (hasHead?rows.slice(1):rows).forEach(r=>{
     const name=String(r[C.plat]??'').trim();
-    if(name){const ty=String(r[C.type]??'').toLowerCase();curR={name,type:/poiss/.test(ty)?'poisson':/veg|végé|vege/.test(ty)?'végé':'viande',ing:[]};out.push(curR)}
+    if(name){const ty=String(r[C.type]??'').toLowerCase();curR={name,type:/poiss/.test(ty)?'poisson':/veg|végé|vege/.test(ty)?'végé':'viande',ing:[]};
+      const cell=i=>i>=0?String(r[i]??'').trim():'';
+      if(fnum(cell(C.prep))!=null)curR.prep=fnum(cell(C.prep));if(fnum(cell(C.cook))!=null)curR.cook=fnum(cell(C.cook));
+      if(/^https?:\/\//i.test(cell(C.url)))curR.url=cell(C.url);
+      const st=cell(C.st).split(/\n|\s*;\s*|\s+\/\s+/).map(x=>x.trim()).filter(Boolean);if(st.length)curR.steps=st;
+      out.push(curR)}
     const n=String(r[C.n]??'').trim();if(!curR||!n)return;
     const qq=fnum(r[C.q]);const [q,u]=unit(qq==null?1:qq,r[C.u]);
     const ing=[q,u,n,rayon(r[C.r],n)];
@@ -461,8 +532,8 @@ function handleFile(file){
     const ws=wb.Sheets[wb.SheetNames[0]];const recs=importRows(XLSX.utils.sheet_to_json(ws,{header:1,defval:''}));
     if(!recs.length)throw new Error('Aucun plat trouvé : vérifie les colonnes');
     const mode=document.querySelector('input[name=mode]:checked').value;
-    const mk=(r,i)=>({id:'f'+Date.now()+'_'+i,name:r.name,type:r.type,ing:r.ing});
-    if(mode==='replace'){lib=recs.map(mk)}else{recs.forEach((r,i)=>{const ex=lib.find(x=>x.name.toLowerCase()===r.name.toLowerCase());if(ex){ex.type=r.type;ex.ing=r.ing}else lib.push(mk(r,i))})}
+    const mk=(r,i)=>Object.assign({id:'f'+Date.now()+'_'+i},r);
+    if(mode==='replace'){lib=recs.map(mk)}else{recs.forEach((r,i)=>{const ex=lib.find(x=>x.name.toLowerCase()===r.name.toLowerCase());if(ex){ex.type=r.type;ex.ing=r.ing;['prep','cook','url','steps'].forEach(k=>{if(r[k]!=null)ex[k]=r[k]})}else lib.push(mk(r,i))})}
     Object.values(weeks).forEach(w=>Object.keys(w.plan).forEach(k=>{if(!byId(w.plan[k].id))delete w.plan[k]}));
     save();render();msg.textContent=recs.length+' plat'+(recs.length>1?'s':'')+' importé'+(recs.length>1?'s':'')+' depuis « '+file.name+' ».';
   }catch(err){msg.textContent='Import impossible : '+err.message;msg.style.color='var(--tomato-ink)'}};
@@ -482,6 +553,7 @@ $('week').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)
   if(b.dataset.lock){const p=W().plan[b.dataset.lock];if(p){p.locked=!p.locked;save();renderWeek()}}
   if(b.dataset.roll){const p=W().plan[b.dataset.roll];if(p&&p.txt)delete W().plan[b.dataset.roll];fill(b.dataset.roll)}
   if(b.dataset.edit)openEd(b.dataset.edit);
+  if(b.dataset.open)openRv(b.dataset.open);
   if(b.dataset.add){W().on[b.dataset.add]=true;openEd(b.dataset.add)}});
 /* ---------- choix manuel (crayon) ---------- */
 let edKey=null,edBack=null;
@@ -498,9 +570,53 @@ $('edf').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$
 $('edrm').addEventListener('click',()=>setSlot(null));
 $('edx').addEventListener('click',closeEd);
 $('ov').addEventListener('click',e=>{if(e.target===$('ov'))closeEd()});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('ov').hidden)closeEd()});
+document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(!$('rv').hidden)closeRv();else if(!$('ov').hidden)closeEd()});
+/* ---------- fiche recette ---------- */
+let rvId=null,rvBack=null;
+const ingLine=i=>num(i[0],2)+' '+i[1]+' '+i[2];
+function openRv(id,edit){if(!byId(id))return;rvId=id;if($('rv').hidden)rvBack=document.activeElement;$('rv').hidden=false;renderRv(edit)}
+function closeRv(){$('rv').hidden=true;rvId=null;if(rvBack&&rvBack.focus)try{rvBack.focus()}catch(e){}}
+function renderRv(edit){
+  const r=byId(rvId),b=$('rvb');if(!r)return closeRv();
+  const head='<div class="row"><h2 id="rvt">'+esc(r.name)+'</h2><button class="ic" data-rv="close" aria-label="Fermer">'+ICON.x+'</button></div>';
+  if(!edit){
+    const f=factor(),url=/^https?:\/\//i.test(r.url||'')?r.url:'';
+    b.innerHTML=head+'<div class="meta"><span class="tag t-'+esc(r.type)+'">'+esc(r.type)+'</span>'+(r.prep?'<span>Préparation '+num(+r.prep)+' min</span>':'')+(r.cook?'<span>Cuisson '+num(+r.cook)+' min</span>':'')+(url?'<a href="'+esc(url)+'" target="_blank" rel="noopener">Recette d\'origine ↗</a>':'')+'</div>'+
+      '<h3>Ingrédients <span class="hint">pour le foyer ('+num(f,1)+' portions adulte)</span></h3><ul class="ingl">'+r.ing.map(i=>'<li><span>'+esc(i[2])+'</span><b>'+fmt(i[0]*f,i[1])+'</b></li>').join('')+'</ul>'+
+      '<h3>Préparation</h3>'+(r.steps&&r.steps.length?'<ol class="steps">'+r.steps.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ol>':'<p class="hint">Pas encore d\'étapes : clique sur « Modifier » pour les ajouter.</p>')+
+      '<div class="actions" style="margin-top:8px"><button class="btn main" data-rv="edit">Modifier la recette</button><button class="btn" data-rv="close">Fermer</button></div>';
+  }else{
+    b.innerHTML=head+'<form id="rvf" style="margin:0">'+
+      '<label class="f">Nom<input type="text" name="name" required value="'+esc(r.name)+'"></label>'+
+      '<div class="g3"><label class="f">Type<select name="type">'+['viande','poisson','végé'].map(t=>'<option'+(t===r.type?' selected':'')+'>'+t+'</option>').join('')+'</select></label>'+
+      '<label class="f">Préparation (min)<input type="number" min="0" name="prep" value="'+esc(r.prep??'')+'"></label><label class="f">Cuisson (min)<input type="number" min="0" name="cook" value="'+esc(r.cook??'')+'"></label></div>'+
+      '<label class="f">Lien vers la recette<input type="url" name="url" placeholder="https://…" value="'+esc(r.url||'')+'"></label>'+
+      '<label class="f">Ingrédients pour 1 adulte, un par ligne<textarea name="ing">'+esc(r.ing.map(ingLine).join('\n'))+'</textarea></label>'+
+      '<label class="f">Étapes, une par ligne<textarea name="steps">'+esc((r.steps||[]).join('\n'))+'</textarea></label>'+
+      '<div class="actions"><button class="btn main" type="submit">Enregistrer</button><button class="btn" type="button" data-rv="view">Annuler</button></div></form>';
+    b.querySelector('[name=name]').focus();
+  }
+}
+$('rvb').addEventListener('click',e=>{const a=e.target.closest('[data-rv]');if(!a)return;const v=a.dataset.rv;if(v==='close')closeRv();else renderRv(v==='edit')});
+$('rvb').addEventListener('submit',e=>{e.preventDefault();const r=byId(rvId),fd=new FormData(e.target);if(!r)return;
+  const old={};r.ing.forEach(i=>old[lc(i[2])]=i);
+  r.name=String(fd.get('name')).trim()||r.name;r.type=fd.get('type');
+  const pn=fnum(fd.get('prep')),cn=fnum(fd.get('cook'));if(pn!=null)r.prep=pn;else delete r.prep;if(cn!=null)r.cook=cn;else delete r.cook;
+  const u=String(fd.get('url')).trim();if(/^https?:\/\//i.test(u))r.url=u;else delete r.url;
+  r.ing=parseLines(String(fd.get('ing'))).map(i=>{const o=old[lc(i[2])];if(o){i[3]=o[3];if(o[4])i[4]=o[4]}return i});
+  r.steps=String(fd.get('steps')).split('\n').map(x=>x.trim()).filter(Boolean);
+  save();render();renderRv(false);toast('Recette enregistrée')});
+$('rv').addEventListener('click',e=>{if(e.target===$('rv'))closeRv()});
+/* ---------- placard, articles, récurrents ---------- */
+$('shop').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.pan!=null){if(!inPantry(b.dataset.pan))HOUSE.pantry.push(b.dataset.pan);save();renderShop();toast('« '+b.dataset.pan+' » : déjà au placard')}
+  if(b.dataset.xdel!=null){W().extras.splice(+b.dataset.xdel,1);W().checked=W().checked.filter(k=>!k.startsWith('x|'));save();renderShop()}});
+$('panl').addEventListener('click',e=>{const b=e.target.closest('[data-unpan]');if(!b)return;HOUSE.pantry=HOUSE.pantry.filter(p=>lc(p)!==lc(b.dataset.unpan));save();renderShop()});
+$('xadd').addEventListener('submit',e=>{e.preventDefault();const n=$('xin').value.trim();if(!n)return;W().extras.push({n,ry:guess(n)});$('xin').value='';save();renderShop();$('xin').focus()});
+$('recl').addEventListener('click',e=>{const b=e.target.closest('[data-rdel]');if(!b)return;HOUSE.recur.splice(+b.dataset.rdel,1);save();renderShop()});
+$('radd').addEventListener('submit',e=>{e.preventDefault();const n=$('rn').value.trim();if(!n)return;HOUSE.recur.push({n,q:$('rq').value.trim(),ry:guess(n)});$('rn').value='';$('rq').value='';save();renderShop();$('rn').focus()});
 $('shop').addEventListener('change',e=>{const k=e.target.dataset.k;if(!k)return;const c=new Set(W().checked);e.target.checked?c.add(k):c.delete(k);W().checked=[...c];save()});
-$('copy').addEventListener('click',async()=>{const t='Courses semaine '+iso(cur).w+'\n\n'+shopping().map(x=>R[x.ry]+'\n'+x.items.map(a=>a.n+' : '+fmt(a.q,a.u)).join('\n')).join('\n\n');
+$('copy').addEventListener('click',async()=>{const t='Courses semaine '+iso(cur).w+'\n\n'+shopping().map(x=>R[x.ry]+'\n'+x.items.map(a=>a.n+(a.qt?' : '+a.qt:'')).join('\n')).join('\n\n');
   try{await navigator.clipboard.writeText(t);toast('Liste copiée')}catch(err){toast('Copie impossible ici')}});
 [['adults',v=>S.adults=Math.max(0,parseInt(v)||0)],['kids',v=>S.kids=Math.max(0,parseInt(v)||0)],['kidf',v=>S.kidf=Math.min(1,Math.max(.2,parseFloat(v)||.6))],['rep',v=>S.rep=parseInt(v)]]
   .forEach(([id,fn])=>$(id).addEventListener('input',e=>{fn(e.target.value);save();renderShop();renderHead();$('repv').textContent=S.rep}));
@@ -508,7 +624,7 @@ $('wklunch').addEventListener('change',e=>{S.wklunch=e.target.checked;save();ren
 $('hol').addEventListener('change',e=>{S.hol=e.target.checked;save();render()});
 $('wed').addEventListener('change',e=>{S.wed=e.target.checked;save();render()});
 $('vary').addEventListener('change',e=>{S.vary=e.target.checked;save()});
-$('lib').addEventListener('click',e=>{const b=e.target.closest('[data-del]');if(!b)return;if(lib.length<=1)return toast('Garde au moins un menu');
+$('lib').addEventListener('click',e=>{const o=e.target.closest('[data-open]');if(o)return openRv(o.dataset.open);const b=e.target.closest('[data-del]');if(!b)return;if(lib.length<=1)return toast('Garde au moins un menu');
   const id=b.dataset.del;lib=lib.filter(r=>r.id!==id);Object.values(weeks).forEach(w=>Object.keys(w.plan).forEach(k=>{if(w.plan[k].id===id)delete w.plan[k]}));save();render()});
 $('add').addEventListener('submit',e=>{e.preventDefault();const n=$('nname').value.trim();if(!n)return;
   lib.push({id:'u'+Date.now(),name:n,type:$('ntype').value,ing:parseLines($('ning').value)});$('nname').value='';$('ning').value='';save();render();toast('« '+n+' » ajouté')});
@@ -536,7 +652,7 @@ const SITE='https://plutus2811.github.io/menus/';
 let db=null,foyer=store.get('foyer',null),unsub=null,synced={},pushT=null,stat=['off','Sur cet appareil'];
 try{if(window.firebase){firebase.initializeApp(FB);db=firebase.firestore()}}catch(e){db=null}
 function setStat(c,t){stat=[c,t];['sstat','hstat'].forEach(id=>{const e=$(id);e.className='pill '+c;e.textContent=t})}
-function fields(){const f={lib:JSON.stringify(lib),settings:JSON.stringify(S)};Object.keys(weeks).forEach(k=>{f['w_'+k]=JSON.stringify(weeks[k])});return f}
+function fields(){const f={lib:JSON.stringify(lib),settings:JSON.stringify(S),house:JSON.stringify(HOUSE)};Object.keys(weeks).forEach(k=>{f['w_'+k]=JSON.stringify(weeks[k])});return f}
 function pushSoon(){if(!db||!foyer)return;clearTimeout(pushT);pushT=setTimeout(push,500)}
 function push(){
   if(!db||!foyer)return;const f=fields(),d={};
@@ -548,8 +664,8 @@ function push(){
 function applyRemote(data){
   let ch=false;
   Object.keys(data).forEach(k=>{const v=data[k];if(typeof v!=='string'||synced[k]===v)return;
-    try{const o=JSON.parse(v);if(k==='lib')lib=o;else if(k==='settings')S=Object.assign(S,o);else if(k.startsWith('w_'))weeks[k.slice(2)]=o;else return;synced[k]=v;ch=true}catch(e){}});
-  if(ch){saveLocal();render()}
+    try{const o=JSON.parse(v);if(k==='lib')lib=o;else if(k==='house')HOUSE=Object.assign({pantry:[],recur:[]},o);else if(k==='settings')S=Object.assign(S,o);else if(k.startsWith('w_'))weeks[k.slice(2)]=o;else return;synced[k]=v;ch=true}catch(e){}});
+  if(ch){if(migrate())save();else saveLocal();render()}
 }
 function connect(){
   if(unsub){unsub();unsub=null}
@@ -591,6 +707,7 @@ $('sbody').addEventListener('click',async e=>{const a=e.target.closest('[data-ac
   if(act==='leave')leaveFoyer();
   if(act==='link'||act==='code'){try{await navigator.clipboard.writeText(act==='link'?invite():foyer);toast(act==='link'?'Lien copié':'Code copié')}catch(err){toast('Copie impossible ici')}}});
 
+if(migrate())saveLocal();
 /* démo : semaine précédente déjà tirée pour montrer les reprises */
 if(!Object.keys(weeks).length){const c=cur;cur=addDays(c,-7);fill(null,true);cur=c;fill(null,true);fresh.clear()}
 render();

@@ -13,6 +13,9 @@ Petite appli web pour planifier les repas de la semaine et générer la liste de
 - Nombre réglable de menus de la semaine précédente autorisés à ressortir
 - Option pour éviter deux repas du même type (viande, poisson, végé) d'affilée
 - Calendrier avec numéros de semaine ISO, chaque semaine garde son planning
+- Fiche recette au clic sur un plat : ingrédients pour le foyer, étapes, temps, lien ; recette modifiable
+- Placard : ingrédients déjà à la maison retirés de la liste
+- Articles hors menus ajoutés à la main, et courses de chaque semaine (petit-déjeuner, goûters…)
 - Liste de courses regroupée par rayon, quantités adaptées au foyer (2 adultes + 2 enfants par défaut, portion enfant réglable)
 - Apports nutritionnels indicatifs : kcal, protéines, glucides, lipides
 - Import de plats depuis un fichier `.ods`, `.xlsx` ou `.csv`
@@ -47,7 +50,7 @@ La clé `apiKey` Firebase présente dans `index.html` est un identifiant public 
 
 ## Format d'import
 
-Une ligne par ingrédient, quantités pour 1 adulte. Laisser « Plat » vide pour continuer le plat du dessus. Les colonnes nutritionnelles (pour 100 g) sont facultatives.
+Une ligne par ingrédient, quantités pour 1 adulte. Laisser « Plat » vide pour continuer le plat du dessus. Les colonnes nutritionnelles (pour 100 g) sont facultatives, ainsi que Préparation (min), Cuisson (min), Lien et Étapes (séparées par « ; »), sur la ligne du plat.
 
 | Plat | Type | Quantité | Unité | Ingrédient | Rayon | kcal | Protéines | Glucides | Lipides | g/pièce |
 |---|---|---|---|---|---|---|---|---|---|---|
