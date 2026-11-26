@@ -155,6 +155,14 @@ textarea{min-height:100px;resize:vertical}
 .who{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:99px;color:#fff;font:800 11px/1 Nunito,sans-serif;flex:none}
 .seg{display:flex;flex-wrap:wrap;gap:6px}.seg button{min-height:40px;padding:0 14px;border-radius:99px;border:1.5px solid var(--line);background:var(--card);font-weight:700;cursor:pointer}
 .seg button[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.bud{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;margin:10px 0 6px}.bud b{font-family:"Baloo 2",sans-serif;font-size:clamp(40px,5vw,54px);line-height:1;white-space:nowrap}
+.bud span{color:var(--soft);font-size:15px}
+.meter{height:14px;border-radius:99px;background:var(--line);overflow:hidden;margin:6px 0 4px}.meter i{display:block;height:100%;border-radius:99px}
+.bry{display:grid;grid-template-columns:minmax(0,11em) minmax(0,1fr) auto;gap:8px;align-items:center;font-size:14px}
+.bry .b{height:10px;border-radius:99px;background:var(--tomato);opacity:.85}
+.bry .v{font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums;text-align:right}
+.list .pr{all:unset;cursor:pointer;font-size:13px;color:var(--soft);white-space:nowrap;padding:4px 6px;border-radius:8px;font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
+.list .pr:hover{background:var(--wash);color:var(--ink)}.list .pr:focus-visible{outline:3px solid var(--tomato-ink)}.list .pr.no{color:var(--tomato-ink)}
 .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:12px;font-weight:700;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.show{opacity:1}
 @media(max-width:1100px){.week{grid-template-columns:repeat(4,minmax(0,1fr))}}
@@ -188,7 +196,7 @@ textarea{min-height:100px;resize:vertical}
   <div class="cols">
     <div class="stackc">
     <section class="panel list">
-      <div class="row"><h2>Liste de courses</h2><button class="btn" id="copy">Copier</button></div>
+      <div class="row"><h2>Liste de courses</h2><span class="actions"><button class="btn" id="copyr" title="Une ligne par article, à coller dans une liste de Rappels">Pour Rappels</button><button class="btn" id="copy">Copier</button></span></div>
       <form class="inrow" id="xadd" style="margin:0 0 6px"><input type="text" id="xin" placeholder="Ajouter un article : lessive, café…" autocomplete="off"><select id="xry" aria-label="Rayon" style="min-height:44px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);padding:0 8px;font-size:15px"><option value="">Rayon auto</option></select><button class="btn" type="submit">Ajouter</button></form>
       <div id="shop"></div>
       <details id="pan"><summary id="pansum"></summary><p class="hint" style="margin:4px 0 8px">Ces ingrédients sont retirés de la liste tant qu'ils sont ici. Clique sur la maison d'un article pour l'y ajouter.</p><div class="lib" id="panl" style="margin:0"></div></details>
@@ -201,6 +209,14 @@ textarea{min-height:100px;resize:vertical}
     </section>
     </div>
     <div class="stackc">
+      <section class="panel" id="budp">
+        <div class="row"><h2 style="margin:0">Budget de la semaine</h2><span class="pill off" id="bweek"></span></div>
+        <div class="bud"><b id="btot"></b><span id="bsub"></span></div>
+        <div id="bbar"></div>
+        <div class="leg" id="bry" style="margin-top:12px"></div>
+        <div class="field" style="margin-top:8px"><span>Budget visé par semaine (€) <span class="hint">0 = pas d'objectif</span></span><input type="number" id="btarget" min="0" step="5"></div>
+        <p class="note" id="bnote"></p>
+      </section>
       <section class="panel">
         <h2>Apports nutritionnels</h2>
         <p class="hint" style="margin:-6px 0 12px">Moyenne par repas, pour une portion adulte</p>
@@ -269,7 +285,7 @@ textarea{min-height:100px;resize:vertical}
         <div class="field" style="border:0;padding:4px 0"><span>Ces recettes sont de</span><select id="iown" style="min-height:44px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);padding:0 8px;font-size:16px"></select></div>
         <div class="radio"><label><input type="radio" name="mode" value="add" checked>Ajouter à ma bibliothèque</label><label><input type="radio" name="mode" value="replace">Remplacer ma bibliothèque</label></div>
         <label class="drop" id="drop"><input type="file" id="file" accept=".ods,.xlsx,.xls,.csv"><b>Choisir un fichier</b><br><span class="hint">ou le glisser ici</span></label>
-        <button class="btn" id="tpl" type="button">Copier le modèle de colonnes</button>
+        <div class="actions"><button class="btn" id="tpl" type="button">Copier le modèle de colonnes</button><button class="btn" id="exp" type="button">Exporter ma bibliothèque (.ods)</button></div>
         <div class="msg" id="impmsg" role="status"></div>
       </div>
     </section>
@@ -277,6 +293,7 @@ textarea{min-height:100px;resize:vertical}
 </div>
 <div class="toast" id="toast"></div>
 <div class="ov" id="ryv" hidden><div class="dlg" role="dialog" aria-modal="true" aria-labelledby="ryt" style="width:min(380px,100%)"><div class="row"><h2 id="ryt" style="font-size:22px"></h2><button class="ic" id="ryx" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><p class="hint" style="margin:0">L'appli retiendra ce rayon pour cet article.</p><div class="rys" id="rys"></div></div></div>
+<div class="ov" id="prv" hidden><form class="dlg" id="prf" role="dialog" aria-modal="true" aria-labelledby="prt" style="width:min(400px,100%)"></form></div>
 <div class="ov" id="rv" hidden><div class="dlg rvd" role="dialog" aria-modal="true" aria-labelledby="rvt" id="rvb"></div></div>
 <div class="ov" id="ov" hidden>
   <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="edt">
@@ -360,11 +377,12 @@ const MCOL=['var(--tomato-ink)','var(--fish)','var(--basil)','var(--g)'];
 function mcol(a){const i=HOUSE.members.indexOf(a);return i<0?'var(--soft)':MCOL[i%MCOL.length]}
 function deN(a){return (/^[aeiouyhéèêàâîôû]/i.test(a)?'d\'':'de ')+a}
 function badge(a){return a?'<span class="who" style="background:'+mcol(a)+'" title="Recette '+esc(deN(a))+'">'+esc(a.charAt(0).toUpperCase())+'</span>':''}
-let HOUSE=Object.assign({members:['David','Alex'],ry:{},pantry:[],recur:[{n:'lait',q:'4 l',ry:'cr'},{n:'céréales',q:'1 paquet',ry:'ep'},{n:'compotes',q:'12',ry:'ep'},{n:'biscuits pour le goûter',q:'2 paquets',ry:'ep'},{n:'fruits',q:'2 kg',ry:'fl'}]},store.get('house',{}));
-let S=Object.assign({adults:2,kids:2,kidf:.6,wklunch:false,hol:true,wed:false,rep:2,vary:true,minF:1,minV:1,maxT:0,rest:true,season:true},store.get('settings',{}));
+let HOUSE=Object.assign({members:['David','Alex'],prices:{},ry:{},pantry:[],recur:[{n:'lait',q:'4 l',ry:'cr'},{n:'céréales',q:'1 paquet',ry:'ep'},{n:'compotes',q:'12',ry:'ep'},{n:'biscuits pour le goûter',q:'2 paquets',ry:'ep'},{n:'fruits',q:'2 kg',ry:'fl'}]},store.get('house',{}));
+let S=Object.assign({budget:0,adults:2,kids:2,kidf:.6,wklunch:false,hol:true,wed:false,rep:2,vary:true,minF:1,minV:1,maxT:0,rest:true,season:true},store.get('settings',{}));
 // Vacances scolaires zone C (Paris), jours sans classe inclus (veille de reprise comprise)
 const ZC=[['2025-10-18','2025-11-02','Toussaint'],['2025-12-20','2026-01-04','Noël'],['2026-02-21','2026-03-08','Hiver'],['2026-04-18','2026-05-03','Printemps'],['2026-05-14','2026-05-17','Pont de l\'Ascension'],['2026-07-04','2026-08-31','Été'],
-['2026-10-17','2026-11-01','Toussaint'],['2026-12-19','2027-01-03','Noël'],['2027-02-06','2027-02-21','Hiver'],['2027-04-03','2027-04-18','Printemps'],['2027-05-06','2027-05-09','Pont de l\'Ascension'],['2027-07-03','2027-08-31','Été']];
+['2026-10-17','2026-11-01','Toussaint'],['2026-12-19','2027-01-03','Noël'],['2027-02-06','2027-02-21','Hiver'],['2027-04-03','2027-04-18','Printemps'],['2027-05-06','2027-05-09','Pont de l\'Ascension'],['2027-07-03','2027-09-01','Été'],
+['2027-10-23','2027-11-07','Toussaint'],['2027-12-18','2028-01-02','Noël'],['2028-02-12','2028-02-27','Hiver'],['2028-04-15','2028-05-01','Printemps'],['2028-05-26','2028-05-28','Pont de l\'Ascension'],['2028-07-05','2028-08-31','Été']];
 const ymd=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 function easter(y){const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),da=((h+l-7*m+114)%31)+1;return new Date(y,mo-1,da)}
 const FERIES={};
@@ -483,9 +501,34 @@ function fmt(q,u){
   const n=Math.ceil(q-0.05);return n+' '+(u==='pièce'?(n>1?'pièces':'pièce'):(n>1?u+'s':u));
 }
 const lc=x=>String(x).trim().toLowerCase();
+// Prix moyens indicatifs en supermarché (France, ordres de grandeur) : [prix, base] base = kg, l ou u (pièce, tranche, gousse)
+const PRICE={'spaghetti':[2,'kg'],'pâtes':[2,'kg'],'riz':[2.5,'kg'],'riz arborio':[5,'kg'],'bœuf haché':[13,'kg'],'sauce tomate':[3,'l'],'oignon':[.25,'u'],'carottes':[1.6,'kg'],'ail':[.3,'u'],"huile d'olive":[9,'l'],
+'parmesan':[22,'kg'],'cuisse de poulet':[1.6,'u'],'pommes de terre':[1.5,'kg'],'salade':[1.2,'u'],'pavé de saumon':[3.5,'u'],'brocoli':[3.5,'kg'],'beurre':[10,'kg'],'citron':[.5,'u'],'jambon':[.8,'u'],
+'crème fraîche':[5,'l'],'lait':[1.1,'l'],'emmental râpé':[11,'kg'],'emmental':[11,'kg'],'pâte brisée':[1.5,'u'],'lardons':[12,'kg'],'œuf':[.3,'u'],'haricots rouges':[3,'kg'],'maïs':[4,'kg'],
+'tomates concassées':[2.5,'kg'],'poivron':[.9,'u'],'pain de mie':[.15,'u'],'soupe de légumes':[2.5,'l'],'poisson pané':[.5,'u'],'lentilles corail':[4.5,'kg'],'lait de coco':[5,'l'],'épinards':[4,'kg'],
+'tortillas':[.3,'u'],'blanc de poulet':[13,'kg'],'avocat':[1,'u'],'ratatouille':[5,'kg'],'pain':[4,'kg'],'pâte à pizza':[1.6,'u'],'mozzarella':[1.2,'u'],'cube de bouillon':[.15,'u'],'champignons':[6,'kg'],
+'dos de cabillaud':[4,'u'],'courgettes':[2.5,'kg'],'galettes de sarrasin':[.4,'u'],'légumes pour soupe':[2.5,'kg'],'fromage frais':[10,'kg'],'steak haché':[1.5,'u'],'frites':[2.5,'kg'],'veau':[20,'kg'],
+'bœuf à braiser':[15,'kg'],'vin rouge':[6,'l'],'vin blanc':[6,'l'],'crozets':[7,'kg'],'reblochon':[15,'kg'],'chipolatas':[.6,'u'],'escalope de dinde':[1.6,'u'],'cordon bleu':[1.2,'u'],'haricots verts':[4,'kg'],
+'feuilles de lasagne':[4,'kg'],'farine':[1.2,'kg'],'merguez':[.7,'u'],'semoule':[2.2,'kg'],'pois chiches':[3,'kg'],'pain à burger':[.4,'u'],'cheddar':[.25,'u'],'tomates':[3,'kg'],'saucisses fumées':[2.5,'u'],
+'lentilles vertes':[4,'kg'],'filet mignon de porc':[14,'kg'],'sauce soja':[8,'l'],'sucre':[1.2,'kg'],'rôti de porc':[11,'kg'],'petits pois carottes':[3,'kg'],'concombre':[1,'u'],'thon':[15,'kg'],'dos de colin':[3,'u'],
+'moules':[5,'kg'],'saumon fumé':[40,'kg'],'poireaux':[3,'kg'],'crevettes':[18,'kg'],'nouilles chinoises':[5,'kg'],'pesto':[15,'kg'],'tomates cerises':[6,'kg'],'aubergine':[3.5,'kg'],'gnocchis':[5,'kg'],
+'chou-fleur':[1.5,'kg'],'petits pois':[3,'kg'],'fruits':[2.5,'kg']};
+const RECP={'céréales':3,'compotes':4,'biscuits pour le goûter':4,'café':4};
+const BASE={kg:'€/kg',l:'€/l',u:'€/unité'};
+const money=(x,d)=>x.toLocaleString('fr-FR',{style:'currency',currency:'EUR',minimumFractionDigits:d??2,maximumFractionDigits:d??2});
+function pref(n){const u=(HOUSE.prices||{})[lc(n)];return u?{p:u,user:true}:PRICE[lc(n)]?{p:PRICE[lc(n)],user:false}:null}
+function costQ(q,u,P){if(!P)return null;const [e,b]=P;if((u==='g'&&b==='kg')||(u==='ml'&&b==='l'))return q/1000*e;if(b==='u'&&!['g','ml'].includes(u))return Math.ceil(q-0.05)*e;return null}
+function parseQ(t){const m=/^\s*([\d.,]+)\s*(kg|g|l|cl|ml)?\b/i.exec(t||'');if(!m)return null;let q=parseFloat(m[1].replace(',','.')),u=(m[2]||'').toLowerCase();if(u==='kg'){q*=1000;u='g'}if(u==='l'){q*=1000;u='ml'}if(u==='cl'){q*=10;u='ml'}return {q,u:u||'pièce'}}
+function itemCost(a){
+  if(a.src==='meal'){const r=pref(a.n);return r?{eur:costQ(a.q,a.u,r.p),user:r.user}:{eur:null}}
+  const x=a.src==='recur'?HOUSE.recur.find(y=>y.n===a.n):W().extras[a.i];if(!x)return {eur:null};
+  if(x.p!=null)return {eur:x.p,user:true};
+  if(a.src==='recur'){if(RECP[lc(x.n)]!=null)return {eur:RECP[lc(x.n)]};const pq=parseQ(x.q),r=pref(x.n);if(pq&&r)return {eur:costQ(pq.q,pq.u,r.p)}}
+  return {eur:null}}
 function ryOf(n,d){const v=(HOUSE.ry||{})[lc(n)];if(R[v])return v;if(d==='di'&&guess(n)==='hy')return 'hy';return R[d]?d:guess(n)}
 function inPantry(n){return HOUSE.pantry.some(p=>lc(p)===lc(n))}
-function shopping(){
+let SHOPIDX={};
+function shopping(){SHOPIDX={};
   const f=factor(),agg={},plan=W().plan,g={},hits=new Set();
   slots().filter(s=>s.on).forEach(s=>{const p=plan[s.key],r=p&&byId(p.id);if(!r)return;
     r.ing.forEach(([q,u,n,ry])=>{if(inPantry(n)){hits.add(lc(n));return}const k=n+'|'+u;agg[k]=agg[k]||{key:k,n,u,ry:ryOf(n,ry),q:0,src:'meal'};agg[k].q+=q*f})});
@@ -494,18 +537,35 @@ function shopping(){
     W().extras.map((x,i)=>({key:'x|'+i+'|'+x.n,n:x.n,qt:'',ry:ryOf(x.n,x.ry),src:'extra',i})));
   all.forEach(a=>{(g[a.ry]=g[a.ry]||[]).push(a)});
   const groups=ORDER.filter(k=>g[k]).map(k=>({ry:k,items:g[k].sort((a,b)=>a.n.localeCompare(b.n,'fr'))}));
+  all.forEach(a=>{const c=itemCost(a);a.eur=c.eur;a.puser=c.user;SHOPIDX[a.key]=a});
   groups.hits=hits;return groups;
 }
 const TAGI='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.5"/></svg>';
 const HOUSEI='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>';
 function renderShop(){
   const g=shopping(),ck=new Set(W().checked);
-  $('shop').innerHTML=g.length?g.map(x=>'<h4>'+R[x.ry]+'</h4>'+x.items.map(a=>'<div class="it"><button class="ic" data-ry="'+esc(a.n)+'" aria-label="Changer le rayon de '+esc(a.n)+'" title="Changer de rayon">'+TAGI+'</button><label><input type="checkbox" data-k="'+esc(a.key)+'"'+(ck.has(a.key)?' checked':'')+'><span>'+esc(a.n)+'</span><span class="q">'+esc(a.qt)+'</span></label>'+
+  $('shop').innerHTML=g.length?g.map(x=>'<h4>'+R[x.ry]+'</h4>'+x.items.map(a=>'<div class="it"><button class="ic" data-ry="'+esc(a.n)+'" aria-label="Changer le rayon de '+esc(a.n)+'" title="Changer de rayon">'+TAGI+'</button><label><input type="checkbox" data-k="'+esc(a.key)+'"'+(ck.has(a.key)?' checked':'')+'><span>'+esc(a.n)+'</span><span class="q">'+esc(a.qt)+'</span></label><button class="pr'+(a.eur==null?' no':'')+'" data-pr="'+esc(a.key)+'" title="Modifier le prix">'+(a.eur==null?'? €':money(a.eur))+'</button>'+
     (a.src==='meal'?'<button class="ic" data-pan="'+esc(a.n)+'" aria-label="'+esc(a.n)+' : déjà au placard" title="Déjà au placard">'+HOUSEI+'</button>':a.src==='recur'?'<span class="src" title="Courses de chaque semaine">chaque sem.</span>':'<button class="ic" data-xdel="'+a.i+'" aria-label="Retirer '+esc(a.n)+'">'+ICON.x+'</button>')+'</div>').join('')).join(''):'<p class="hint">Tire la semaine pour générer la liste.</p>';
   const pn=HOUSE.pantry.length,hn=g.hits.size;
   $('pansum').textContent='Déjà au placard ('+pn+')'+(hn?' · '+hn+' retiré'+(hn>1?'s':'')+' cette semaine':'');
   $('panl').innerHTML=pn?HOUSE.pantry.slice().sort((a,b)=>a.localeCompare(b,'fr')).map(n=>'<span class="chip"'+(g.hits.has(lc(n))?' style="outline:2px solid var(--basil)"':'')+'>'+esc(n)+'<button class="ic" data-unpan="'+esc(n)+'" aria-label="Remettre '+esc(n)+' dans la liste">'+ICON.x+'</button></span>').join(''):'<span class="hint">Rien pour l\'instant.</span>';
   $('recl').innerHTML=HOUSE.recur.length?HOUSE.recur.map((x,i)=>'<div class="rec"><span>'+esc(x.n)+'</span><span class="q">'+esc(x.q||'')+'</span><button class="ic" data-rdel="'+i+'" aria-label="Retirer '+esc(x.n)+'">'+ICON.x+'</button></div>').join(''):'<p class="hint">Aucun article récurrent.</p>';
+}
+function renderBud(){
+  const g=shopping(),items=g.flatMap(x=>x.items),f=factor();
+  let tot=0,meal=0,rec=0,ext=0,miss=0;const by={};
+  items.forEach(a=>{if(a.eur==null){miss++;return}tot+=a.eur;by[a.ry]=(by[a.ry]||0)+a.eur;if(a.src==='meal')meal+=a.eur;else if(a.src==='recur')rec+=a.eur;else ext+=a.eur});
+  const plan=W().plan,nm=slots().filter(s=>s.on&&plan[s.key]&&plan[s.key].id).length;
+  $('bweek').textContent='Semaine '+iso(cur).w;
+  $('btot').textContent='≈ '+money(tot,0);
+  $('bsub').textContent=items.length?('repas '+money(meal,0)+' · chaque semaine '+money(rec,0)+(ext?' · ajouts '+money(ext,0):'')+(nm?' · ≈ '+money(meal/(nm*f))+' par portion adulte':'')):'Tire la semaine pour estimer le budget.';
+  const T=+S.budget||0;
+  $('bbar').innerHTML=T?'<div class="meter"><i style="width:'+Math.min(100,tot/T*100)+'%;background:'+(tot>T?'var(--tomato)':'var(--basil)')+'"></i></div><div class="hint">'+(tot>T?'Dépassement de '+money(tot-T,0)+' sur '+money(T,0):'Il reste '+money(T-tot,0)+' sur '+money(T,0))+'</div>':'';
+  const mx=Math.max(1,...Object.values(by));
+  $('bry').innerHTML=ORDER.filter(k=>by[k]).map(k=>'<div class="bry"><span>'+R[k]+'</span><span class="b" style="width:'+(by[k]/mx*100)+'%"></span><span class="v">'+money(by[k],0)+'</span></div>').join('');
+  $('btarget').value=T||'';
+  const m=HOUSE.members||[];
+  $('bnote').textContent=(m.length===2&&tot?'Partagé à deux : ≈ '+money(tot/2,0)+' chacun. ':'')+'Prix moyens indicatifs de supermarché, à ajuster : touche un prix dans la liste pour le modifier.'+(miss?' '+miss+' article'+(miss>1?'s':'')+' sans prix (« ? € »).':'');
 }
 function renderNut(){
   const plan=W().plan,meals=slots().filter(s=>s.on).map(s=>plan[s.key]&&byId(plan[s.key].id)).filter(Boolean);
@@ -541,7 +601,7 @@ function renderSide(){
   const shown=lib.filter(r=>LIBF==='all'||(LIBF==='ex'?!r.author:r.author===LIBF));
   $('lib').innerHTML=(shown.length?'':'<span class="hint">Aucune recette pour l\'instant.</span>')+shown.map(r=>'<span class="chip">'+badge(r.author)+'<span class="t-'+esc(r.type)+'">●</span><button class="nm" data-open="'+esc(r.id)+'">'+(r.fav===1?'❤️ ':r.fav===-1?'👎 ':'')+esc(r.name)+'</button><button class="ic" data-del="'+esc(r.id)+'" aria-label="Supprimer '+esc(r.name)+'">'+ICON.x+'</button></span>').join('');
 }
-function render(){renderMe();renderHead();renderWeek();renderShop();renderNut();renderCal();renderSide()}
+function render(){renderMe();renderHead();renderWeek();renderShop();renderBud();renderNut();renderCal();renderSide()}
 function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('show'),2000)}
 function goto(m){cur=monday(m);calMonth=new Date(cur.getFullYear(),cur.getMonth(),1);render()}
 
@@ -685,23 +745,48 @@ let ryName=null;
 function openRy(n){ryName=n;$('ryt').textContent='Rayon pour « '+n+' »';const c=ryOf(n);$('rys').innerHTML=ORDER.map(k=>'<button data-set="'+k+'"'+(k===c?' class="on"':'')+'>'+R[k]+'</button>').join('');$('ryv').hidden=false;$('rys').querySelector('.on')?.focus()}
 function closeRy(){$('ryv').hidden=true;ryName=null}
 $('rys').addEventListener('click',e=>{const b=e.target.closest('[data-set]');if(!b||!ryName)return;HOUSE.ry[lc(ryName)]=b.dataset.set;W().extras.forEach(x=>{if(lc(x.n)===lc(ryName))x.ry=b.dataset.set});HOUSE.recur.forEach(x=>{if(lc(x.n)===lc(ryName))x.ry=b.dataset.set});
-  const n=ryName;closeRy();save();renderShop();toast('« '+n+' » rangé dans '+R[b.dataset.set])});
+  const n=ryName;closeRy();save();renderShop();renderBud();toast('« '+n+' » rangé dans '+R[b.dataset.set])});
 $('ryx').addEventListener('click',closeRy);$('ryv').addEventListener('click',e=>{if(e.target===$('ryv'))closeRy()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('ryv').hidden)closeRy()});
+let prKey=null;
+function openPr(key){const a=SHOPIDX[key];if(!a)return;prKey=key;const f=$('prf');
+  if(a.src==='meal'){const r=pref(a.n),d=PRICE[lc(a.n)],P=r?r.p:[ '', a.u==='g'?'kg':a.u==='ml'?'l':'u'];
+    f.innerHTML='<div class="row"><h2 id="prt" style="font-size:22px;margin:0">Prix : '+esc(a.n)+'</h2><button class="ic" type="button" data-pc="x" aria-label="Fermer">'+ICON.x+'</button></div>'+
+      '<div class="inrow" style="margin:0"><input type="text" inputmode="decimal" autocomplete="off" name="p" value="'+esc(P[0])+'" placeholder="Prix" required style="flex:1 1 120px"><select name="b" style="min-height:44px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);padding:0 8px;font-size:16px">'+Object.entries(BASE).map(([k,l])=>'<option value="'+k+'"'+(k===P[1]?' selected':'')+'>'+l+'</option>').join('')+'</select></div>'+
+      '<p class="hint" style="margin:0">Cette semaine : '+esc(a.qt)+(a.eur!=null?' ≈ '+money(a.eur):'')+'. '+(d?'Prix moyen indicatif : '+money(d[0])+BASE[d[1]].slice(1)+'.':'Pas de prix indicatif pour cet article.')+' Le prix est retenu pour toutes les semaines.</p>';
+  }else{
+    f.innerHTML='<div class="row"><h2 id="prt" style="font-size:22px;margin:0">Prix : '+esc(a.n)+'</h2><button class="ic" type="button" data-pc="x" aria-label="Fermer">'+ICON.x+'</button></div>'+
+      '<label class="f" style="display:grid;gap:4px;font-weight:700;font-size:14px">Prix pour '+(a.qt?esc(a.qt):'cet article')+' (€)<input type="text" inputmode="decimal" autocomplete="off" name="p" value="'+esc(a.puser&&a.eur!=null?a.eur:'')+'" placeholder="'+esc(a.eur!=null?a.eur.toFixed(2):'')+'" required></label>';
+  }
+  f.innerHTML+='<div class="actions"><button class="btn main" type="submit">Enregistrer</button>'+(a.puser?'<button class="btn" type="button" data-pc="reset">Prix par défaut</button>':'')+'</div>';
+  $('prv').hidden=false;f.querySelector('[name=p]').focus()}
+function closePr(){$('prv').hidden=true;prKey=null}
+$('prf').addEventListener('submit',e=>{e.preventDefault();const a=SHOPIDX[prKey];if(!a)return closePr();const fd=new FormData(e.target),v=fnum(fd.get('p'));if(v==null)return;
+  if(a.src==='meal'){HOUSE.prices[lc(a.n)]=[v,fd.get('b')]}else{const x=a.src==='recur'?HOUSE.recur.find(y=>y.n===a.n):W().extras[a.i];if(x)x.p=v}
+  closePr();save();renderShop();renderBud();toast('Prix enregistré')});
+$('prf').addEventListener('click',e=>{const b=e.target.closest('[data-pc]');if(!b)return;if(b.dataset.pc==='reset'){const a=SHOPIDX[prKey];
+  if(a.src==='meal')delete HOUSE.prices[lc(a.n)];else{const x=a.src==='recur'?HOUSE.recur.find(y=>y.n===a.n):W().extras[a.i];if(x)delete x.p}save();renderShop();renderBud()}closePr()});
+$('prv').addEventListener('click',e=>{if(e.target===$('prv'))closePr()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('prv').hidden)closePr()});
+$('btarget').addEventListener('change',e=>{S.budget=Math.max(0,fnum(e.target.value)||0);save();renderBud()});
 $('shop').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.pr!=null)return openPr(b.dataset.pr);
   if(b.dataset.ry!=null)return openRy(b.dataset.ry);
-  if(b.dataset.pan!=null){if(!inPantry(b.dataset.pan))HOUSE.pantry.push(b.dataset.pan);save();renderShop();toast('« '+b.dataset.pan+' » : déjà au placard')}
+  if(b.dataset.pan!=null){if(!inPantry(b.dataset.pan))HOUSE.pantry.push(b.dataset.pan);save();renderShop();renderBud();toast('« '+b.dataset.pan+' » : déjà au placard')}
   if(b.dataset.xdel!=null){W().extras.splice(+b.dataset.xdel,1);W().checked=W().checked.filter(k=>!k.startsWith('x|'));save();renderShop()}});
 $('panl').addEventListener('click',e=>{const b=e.target.closest('[data-unpan]');if(!b)return;HOUSE.pantry=HOUSE.pantry.filter(p=>lc(p)!==lc(b.dataset.unpan));save();renderShop()});
 $('xry').innerHTML+=ORDER.map(k=>'<option value="'+k+'">'+R[k]+'</option>').join('');
-$('xadd').addEventListener('submit',e=>{e.preventDefault();const n=$('xin').value.trim();if(!n)return;const rv=$('xry').value;if(rv){HOUSE.ry[lc(n)]=rv}W().extras.push({n,ry:rv||ryOf(n)});$('xry').value='';$('xin').value='';save();renderShop();$('xin').focus()});
+$('xadd').addEventListener('submit',e=>{e.preventDefault();const n=$('xin').value.trim();if(!n)return;const rv=$('xry').value;if(rv){HOUSE.ry[lc(n)]=rv}W().extras.push({n,ry:rv||ryOf(n)});$('xry').value='';$('xin').value='';save();renderShop();renderBud();$('xin').focus()});
 $('recl').addEventListener('click',e=>{const b=e.target.closest('[data-rdel]');if(!b)return;HOUSE.recur.splice(+b.dataset.rdel,1);save();renderShop()});
-$('radd').addEventListener('submit',e=>{e.preventDefault();const n=$('rn').value.trim();if(!n)return;HOUSE.recur.push({n,q:$('rq').value.trim(),ry:guess(n)});$('rn').value='';$('rq').value='';save();renderShop();$('rn').focus()});
+$('radd').addEventListener('submit',e=>{e.preventDefault();const n=$('rn').value.trim();if(!n)return;HOUSE.recur.push({n,q:$('rq').value.trim(),ry:guess(n)});$('rn').value='';$('rq').value='';save();renderShop();renderBud();$('rn').focus()});
 $('shop').addEventListener('change',e=>{const k=e.target.dataset.k;if(!k)return;const c=new Set(W().checked);e.target.checked?c.add(k):c.delete(k);W().checked=[...c];save()});
+$('copyr').addEventListener('click',async()=>{const ck=new Set(W().checked);const t=shopping().flatMap(x=>x.items).filter(a=>!ck.has(a.key)).map(a=>a.n+(a.qt?' ('+a.qt+')':'')).join('\n');
+  if(!t)return toast('Rien à copier');
+  try{await navigator.clipboard.writeText(t);toast('Copié ! Dans Rappels : ouvre ta liste de courses, appuie longuement, puis Coller')}catch(err){toast('Copie impossible ici')}});
 $('copy').addEventListener('click',async()=>{const t='Courses semaine '+iso(cur).w+'\n\n'+shopping().map(x=>R[x.ry]+'\n'+x.items.map(a=>a.n+(a.qt?' : '+a.qt:'')).join('\n')).join('\n\n');
   try{await navigator.clipboard.writeText(t);toast('Liste copiée')}catch(err){toast('Copie impossible ici')}});
 [['adults',v=>S.adults=Math.max(0,parseInt(v)||0)],['kids',v=>S.kids=Math.max(0,parseInt(v)||0)],['kidf',v=>S.kidf=Math.min(1,Math.max(.2,parseFloat(v)||.6))],['rep',v=>S.rep=parseInt(v)]]
-  .forEach(([id,fn])=>$(id).addEventListener('input',e=>{fn(e.target.value);save();renderShop();renderHead();$('repv').textContent=S.rep}));
+  .forEach(([id,fn])=>$(id).addEventListener('input',e=>{fn(e.target.value);save();renderShop();renderBud();renderHead();$('repv').textContent=S.rep}));
 $('wklunch').addEventListener('change',e=>{S.wklunch=e.target.checked;save();render()});
 $('hol').addEventListener('change',e=>{S.hol=e.target.checked;save();render()});
 $('wed').addEventListener('change',e=>{S.wed=e.target.checked;save();render()});
@@ -721,6 +806,14 @@ $('file').addEventListener('change',e=>{if(e.target.files[0])handleFile(e.target
 const dz=$('drop');['dragover','dragenter'].forEach(t=>dz.addEventListener(t,e=>{e.preventDefault();dz.classList.add('over')}));
 ['dragleave','drop'].forEach(t=>dz.addEventListener(t,()=>dz.classList.remove('over')));
 dz.addEventListener('drop',e=>{e.preventDefault();const f=e.dataTransfer.files[0];if(f)handleFile(f)});
+$('exp').addEventListener('click',()=>{const msg=$('impmsg');msg.style.color='';
+  if(typeof XLSX==='undefined'){msg.textContent='Le lecteur de fichiers n\'a pas pu se charger. Vérifie ta connexion et recharge la page.';msg.style.color='var(--tomato-ink)';return}
+  const H=['Plat','Type','Quantité','Unité','Ingrédient','Rayon','kcal','Protéines','Glucides','Lipides','g/pièce','Préparation (min)','Cuisson (min)','Lien','Étapes','Saison','Favori','Restes','Auteur'],rows=[H];
+  lib.forEach(r=>r.ing.forEach((i,j)=>{const n=i[4]||NUT[lc(i[2])]||[];
+    rows.push([j?'':r.name,j?'':r.type,i[0],i[1],i[2],R[R[i[3]]?i[3]:'di'],n[0]??'',n[1]??'',n[2]??'',n[3]??'',n[4]??''].concat(j?['','','','','','','','']:[r.prep??'',r.cook??'',r.url||'',(r.steps||[]).join('\n'),r.season==='ete'?'été':r.season==='hiver'?'hiver':'',r.fav===1?'oui':r.fav===-1?'éviter':'',r.big?'oui':'',r.author||'']))}));
+  try{const wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=H.map((h,i)=>({wch:[30,9,9,8,24,20,7,9,9,8,8,11,10,20,60,8,8,8,10][i]}));XLSX.utils.book_append_sheet(wb,ws,'Menus');
+    XLSX.writeFile(wb,'bibliotheque-menus-'+ymd(new Date())+'.ods',{bookType:'ods'});msg.textContent=lib.length+' recettes exportées. Le fichier se réimporte tel quel.'}
+  catch(err){msg.textContent='Export impossible ici ('+err.message+'). Ouvre l\'appli depuis plutus2811.github.io/menus.';msg.style.color='var(--tomato-ink)'}});
 $('tpl').addEventListener('click',async()=>{const t=['Plat\tType\tQuantité\tUnité\tIngrédient\tRayon\tkcal\tProtéines\tGlucides\tLipides\tg/pièce','Lasagnes\tviande\t100\tg\tbœuf haché\tBoucherie','\t\t3\tpièce\tfeuilles de lasagne\tÉpicerie\t350\t12\t70\t1.5\t20'].join('\n');
   try{await navigator.clipboard.writeText(t);toast('Modèle copié : colle-le dans Calc en A1')}catch(err){toast('Copie impossible ici')}});
 
@@ -753,7 +846,7 @@ function push(){
 function applyRemote(data){
   let ch=false;
   Object.keys(data).forEach(k=>{const v=data[k];if(typeof v!=='string'||synced[k]===v)return;
-    try{const o=JSON.parse(v);if(k==='lib')lib=o;else if(k==='house')HOUSE=Object.assign({members:['David','Alex'],ry:{},pantry:[],recur:[]},o);else if(k==='settings')S=Object.assign(S,o);else if(k.startsWith('w_'))weeks[k.slice(2)]=o;else return;synced[k]=v;ch=true}catch(e){}});
+    try{const o=JSON.parse(v);if(k==='lib')lib=o;else if(k==='house')HOUSE=Object.assign({members:['David','Alex'],prices:{},ry:{},pantry:[],recur:[]},o);else if(k==='settings')S=Object.assign(S,o);else if(k.startsWith('w_'))weeks[k.slice(2)]=o;else return;synced[k]=v;ch=true}catch(e){}});
   if(ch){if(migrate())save();else saveLocal();render()}
 }
 function connect(){

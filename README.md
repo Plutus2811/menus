@@ -12,7 +12,7 @@ Petite appli web pour planifier les repas de la semaine et générer la liste de
 - Restes : un plat « grande quantité » le soir est reprévu le lendemain midi (quantités doublées dans la liste)
 - Cadenas pour garder un repas, relance d'un seul repas
 - Crayon pour choisir un repas à la main (plat de la bibliothèque, repas libre comme « Restes », ou pas de repas)
-- Vacances scolaires zone C (Paris) et jours fériés : midis à la maison automatiquement, badge sur les jours concernés (dates jusqu'à l'été 2027)
+- Vacances scolaires zone C (Paris) et jours fériés : midis à la maison automatiquement, badge sur les jours concernés (dates jusqu'à l'été 2028)
 - Option mercredi midi à la maison
 - Thème jour, nuit ou automatique (réglé par appareil)
 - Nombre réglable de menus de la semaine précédente autorisés à ressortir
@@ -21,6 +21,9 @@ Petite appli web pour planifier les repas de la semaine et générer la liste de
 - Fiche recette au clic sur un plat : ingrédients pour le foyer, étapes, temps, lien ; recette modifiable
 - Placard : ingrédients déjà à la maison retirés de la liste
 - Articles hors menus ajoutés à la main, et courses de chaque semaine (petit-déjeuner, goûters…)
+- Budget estimé de la semaine : prix moyens indicatifs modifiables, coût par portion, budget visé, répartition par rayon
+- Copie de la liste au format Rappels (iPhone) : une ligne par article
+- Export de la bibliothèque en .ods (réimportable)
 - Liste de courses regroupée par rayon, quantités adaptées au foyer (2 adultes + 2 enfants par défaut, portion enfant réglable)
 - Apports nutritionnels indicatifs : kcal, protéines, glucides, lipides
 - Import de plats depuis un fichier `.ods`, `.xlsx` ou `.csv`
