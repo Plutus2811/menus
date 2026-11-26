@@ -635,10 +635,11 @@ function renderSide(){
   const mine=HOUSE.members.includes(LIBF)?lib.filter(r=>r.author===LIBF).length:0;
   $('libau').innerHTML=mine?'<button class="btn" data-unau="'+esc(LIBF)+'" style="min-height:38px;font-size:14px">'+(UNAU===LIBF?'Confirmer : retirer « '+esc(LIBF)+' » de '+mine+' recette'+(mine>1?'s':'')+' ?':'Retirer « '+esc(LIBF)+' » comme auteur ('+mine+' recette'+(mine>1?'s':'')+')')+'</button>'+(UNAU===LIBF?' <button class="btn" data-unau="" style="min-height:38px;font-size:14px">Annuler</button>':'')+'<p class="hint" style="margin:4px 0 0">Les plats restent dans la bibliothèque, ils passent dans « Exemples ».</p>':'';
   const tg=allTags();if(LIBT!=='all'&&LIBT!=='none'&&!tg.includes(LIBT))LIBT='all';
-  const nt=lib.filter(r=>!(r.tags||[]).length).length;
-  $('libt').innerHTML=[['all','Toutes catégories']].concat(tg.map(t=>[t,t+' ('+lib.filter(r=>(r.tags||[]).includes(t)).length+')']),nt?[['none','Sans catégorie ('+nt+')']]:[]).map(([k,l])=>'<button data-t="'+esc(k)+'" aria-pressed="'+(LIBT===k)+'">'+esc(l)+'</button>').join('');
+  const byA=lib.filter(r=>LIBF==='all'||(LIBF==='ex'?!r.author:r.author===LIBF));
+  const nt=byA.filter(r=>!(r.tags||[]).length).length;
+  $('libt').innerHTML=[['all','Toutes catégories']].concat(tg.map(t=>[t,t+' ('+byA.filter(r=>(r.tags||[]).includes(t)).length+')']),nt?[['none','Sans catégorie ('+nt+')']]:[]).map(([k,l])=>'<button data-t="'+esc(k)+'" aria-pressed="'+(LIBT===k)+'">'+esc(l)+'</button>').join('');
   const shown=lib.filter(r=>(LIBF==='all'||(LIBF==='ex'?!r.author:r.author===LIBF))&&(LIBT==='all'||(LIBT==='none'?!(r.tags||[]).length:(r.tags||[]).includes(LIBT))));
-  $('lib').innerHTML=(shown.length?'':'<span class="hint">Aucune recette pour l\'instant.</span>')+shown.map(r=>'<span class="chip">'+badge(r.author)+'<span class="t-'+esc(r.type)+'">●</span><button class="nm" data-open="'+esc(r.id)+'">'+(r.fav===1?'❤️ ':r.fav===-1?'👎 ':'')+esc(r.name)+'</button><button class="ic" data-del="'+esc(r.id)+'" aria-label="Supprimer '+esc(r.name)+'">'+ICON.x+'</button></span>').join('');
+  $('lib').innerHTML=(shown.length?'':lib.length?'<span class="hint">Aucune recette avec ces filtres. <button class="btn" data-reset="1" style="min-height:34px;font-size:14px;margin-left:6px">Tout afficher</button></span>':'<span class="hint">Aucune recette pour l\'instant.</span>')+shown.map(r=>'<span class="chip">'+badge(r.author)+'<span class="t-'+esc(r.type)+'">●</span><button class="nm" data-open="'+esc(r.id)+'">'+(r.fav===1?'❤️ ':r.fav===-1?'👎 ':'')+esc(r.name)+'</button><button class="ic" data-del="'+esc(r.id)+'" aria-label="Supprimer '+esc(r.name)+'">'+ICON.x+'</button></span>').join('');
 }
 function render(){renderMe();renderHead();renderWeek();renderShop();renderBud();renderNut();renderCal();renderSide()}
 function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('show'),2000)}
@@ -849,7 +850,7 @@ $('libau').addEventListener('click',e=>{const b=e.target.closest('[data-unau]');
   let n=0;lib.forEach(r=>{if(r.author===m){delete r.author;n++}});UNAU=null;LIBF='ex';save();render();toast(n+' recette'+(n>1?'s':'')+' sans auteur désormais')});
 $('libt').addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(!b)return;LIBT=b.dataset.t;renderSide()});
 $('libf').addEventListener('click',e=>{const b=e.target.closest('[data-f]');if(!b)return;LIBF=b.dataset.f;UNAU=null;renderSide()});
-$('lib').addEventListener('click',e=>{const o=e.target.closest('[data-open]');if(o)return openRv(o.dataset.open);const b=e.target.closest('[data-del]');if(!b)return;if(lib.length<=1)return toast('Garde au moins un menu');
+$('lib').addEventListener('click',e=>{if(e.target.closest('[data-reset]')){LIBF='all';LIBT='all';return renderSide()}const o=e.target.closest('[data-open]');if(o)return openRv(o.dataset.open);const b=e.target.closest('[data-del]');if(!b)return;if(lib.length<=1)return toast('Garde au moins un menu');
   const id=b.dataset.del;lib=lib.filter(r=>r.id!==id);Object.values(weeks).forEach(w=>Object.keys(w.plan).forEach(k=>{if(w.plan[k].id===id)delete w.plan[k]}));save();render()});
 $('add').addEventListener('submit',e=>{e.preventDefault();const n=$('nname').value.trim();if(!n)return;
   lib.push(Object.assign({id:'u'+Date.now(),name:n,type:$('ntype').value,ing:parseLines($('ning').value)},ME?{author:ME}:{}));migrate();$('nname').value='';$('ning').value='';save();render();toast('« '+n+' » ajouté')});
