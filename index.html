@@ -231,6 +231,12 @@ textarea{min-height:100px;resize:vertical}
       <div class="field"><span>Mercredi midi à la maison</span><input type="checkbox" id="wed"></div>
       <div class="field"><span>Menus de la semaine précédente autorisés : <b id="repv"></b></span><input type="range" id="rep" min="0" max="7"></div>
       <div class="field"><span>Éviter deux repas du même type d'affilée</span><input type="checkbox" id="vary"></div>
+      <h3 style="margin-top:16px;font-size:18px">Équilibre et contraintes</h3>
+      <div class="field"><span>Au moins ce nombre de repas <b>poisson</b> par semaine</span><input type="number" id="minF" min="0" max="7"></div>
+      <div class="field"><span>Au moins ce nombre de repas <b>végé</b> par semaine</span><input type="number" id="minV" min="0" max="7"></div>
+      <div class="field"><span>Temps maximum les soirs d'école <span class="hint">(préparation + cuisson)</span></span><select id="maxT" style="min-height:44px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);padding:0 8px;font-size:16px"><option value="0">Pas de limite</option><option value="20">20 min</option><option value="30">30 min</option><option value="45">45 min</option><option value="60">1 h</option></select></div>
+      <div class="field"><span>Respecter les saisons <span class="hint">(été : avril à septembre)</span></span><input type="checkbox" id="season"></div>
+      <div class="field"><span>Prévoir les restes le lendemain midi <span class="hint">(plats « grande quantité »)</span></span><input type="checkbox" id="rest"></div>
       <h3 style="margin-top:14px;font-size:18px" id="lasttitle">Semaine précédente</h3>
       <div class="last" id="last"></div>
     </section>
@@ -248,7 +254,7 @@ textarea{min-height:100px;resize:vertical}
       </form>
       <div class="imp">
         <h3 style="font-size:20px">Importer depuis un fichier .ods</h3>
-        <p class="hint" style="margin:4px 0 8px">Une ligne par ingrédient, quantités pour 1 adulte. Laisse « Plat » vide pour continuer le plat du dessus. Les colonnes nutritionnelles (pour 100 g) sont facultatives, comme Préparation (min), Cuisson (min), Lien et Étapes (séparées par « ; »), à remplir sur la ligne du plat. Fonctionne aussi avec .xlsx et .csv.</p>
+        <p class="hint" style="margin:4px 0 8px">Une ligne par ingrédient, quantités pour 1 adulte. Laisse « Plat » vide pour continuer le plat du dessus. Les colonnes nutritionnelles (pour 100 g) sont facultatives, comme Préparation (min), Cuisson (min), Lien, Étapes (séparées par « ; »), Saison (été / hiver), Favori (oui / éviter) et Restes (oui), à remplir sur la ligne du plat. Fonctionne aussi avec .xlsx et .csv.</p>
         <div class="scroll"><table class="ex"><tr><th>Plat</th><th>Type</th><th>Quantité</th><th>Unité</th><th>Ingrédient</th><th>Rayon</th><th>kcal</th><th>Protéines</th><th>Glucides</th><th>Lipides</th><th>g/pièce</th></tr>
         <tr><td>Lasagnes</td><td>viande</td><td>100</td><td>g</td><td>bœuf haché</td><td>Boucherie</td><td></td><td></td><td></td><td></td><td></td></tr>
         <tr><td></td><td></td><td>3</td><td>pièce</td><td>feuilles de lasagne</td><td>Épicerie</td><td>350</td><td>12</td><td>70</td><td>1.5</td><td>20</td></tr></table></div>
@@ -331,13 +337,14 @@ const STEPS=[
 [5,10,["Chauffer une poêle et y poser la galette.","Casser l'œuf au centre, ajouter le jambon et l'emmental autour.","Laisser cuire jusqu'à ce que le blanc soit pris, puis replier les bords."]],
 [15,25,["Éplucher et couper les légumes.","Les cuire 25 min dans de l'eau salée à hauteur.","Mixer.","Servir avec des tartines de fromage frais."]],
 [5,20,["Cuire les frites au four selon le paquet.","Cuire les steaks hachés 3 à 4 min de chaque côté.","Servir avec la salade."]]];
-DEF.forEach((r,i)=>{const t=STEPS[i];if(t){r.prep=t[0];r.cook=t[1];r.steps=t[2]}});
-function migrate(){let ch=false;lib.forEach(r=>{const m=/^d(\d+)$/.exec(r.id);const t=m&&STEPS[+m[1]];if(t&&!r.steps&&DEF[+m[1]].name===r.name){r.prep=t[0];r.cook=t[1];r.steps=t[2];ch=true}});return ch}
+const EXTRA={0:{big:true},5:{big:true},12:{big:true,season:'hiver'},16:{season:'hiver'},10:{season:'ete'}};
+DEF.forEach((r,i)=>{const t=STEPS[i];if(t){r.prep=t[0];r.cook=t[1];r.steps=t[2]}Object.assign(r,EXTRA[i]||{});r.m2=1});
+function migrate(){let ch=false;lib.forEach(r=>{const m=/^d(\d+)$/.exec(r.id);const t=m&&STEPS[+m[1]];if(t&&!r.steps&&DEF[+m[1]].name===r.name){r.prep=t[0];r.cook=t[1];r.steps=t[2];ch=true}});lib.forEach(r=>{const m=/^d(\d+)$/.exec(r.id);if(m&&!r.m2&&DEF[+m[1]]&&DEF[+m[1]].name===r.name){Object.assign(r,EXTRA[+m[1]]||{});r.m2=1;ch=true}});return ch}
 
 const store={get(k,d){try{const v=localStorage.getItem('menus2.'+k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem('menus2.'+k,JSON.stringify(v))}catch(e){}}};
 let lib=store.get('lib',DEF);
 let HOUSE=Object.assign({ry:{},pantry:[],recur:[{n:'lait',q:'4 l',ry:'cr'},{n:'céréales',q:'1 paquet',ry:'ep'},{n:'compotes',q:'12',ry:'ep'},{n:'biscuits pour le goûter',q:'2 paquets',ry:'ep'},{n:'fruits',q:'2 kg',ry:'fl'}]},store.get('house',{}));
-let S=Object.assign({adults:2,kids:2,kidf:.6,wklunch:false,hol:true,wed:false,rep:2,vary:true},store.get('settings',{}));
+let S=Object.assign({adults:2,kids:2,kidf:.6,wklunch:false,hol:true,wed:false,rep:2,vary:true,minF:1,minV:1,maxT:0,rest:true,season:true},store.get('settings',{}));
 // Vacances scolaires zone C (Paris), jours sans classe inclus (veille de reprise comprise)
 const ZC=[['2025-10-18','2025-11-02','Toussaint'],['2025-12-20','2026-01-04','Noël'],['2026-02-21','2026-03-08','Hiver'],['2026-04-18','2026-05-03','Printemps'],['2026-05-14','2026-05-17','Pont de l\'Ascension'],['2026-07-04','2026-08-31','Été'],
 ['2026-10-17','2026-11-01','Toussaint'],['2026-12-19','2027-01-03','Noël'],['2027-02-06','2027-02-21','Hiver'],['2027-04-03','2027-04-18','Printemps'],['2027-05-06','2027-05-09','Pont de l\'Ascension'],['2027-07-03','2027-08-31','Été']];
@@ -382,22 +389,48 @@ function saveLocal(){store.set('lib',lib);store.set('settings',S);store.set('wee
 function save(){saveLocal();pushSoon()}
 function pick(a){return a[Math.floor(Math.random()*a.length)]}
 
+const totalT=r=>(+r.prep||0)+(+r.cook||0);
+const SUMMER=m=>m>=3&&m<=8; // avril (3) à septembre (8)
+function inSeason(r,d){if(!S.season||!r.season||r.season==='toute')return true;return r.season==='ete'?SUMMER(d.getMonth()):!SUMMER(d.getMonth())}
+function wpick(c){const w=c.map(r=>r.fav===1?3:1),t=w.reduce((a,b)=>a+b,0);let x=Math.random()*t;for(let i=0;i<c.length;i++){x-=w[i];if(x<0)return c[i]}return c[c.length-1]}
+const narrow=(c,f)=>{const n=c.filter(f);return n.length?n:c};
 function fill(onlyKey,silent){
   const plan=W().plan,last=prevIds(),act=slots().filter(s=>s.on),used=new Set();let reps=0;
   const keeps=s=>{const p=plan[s.key];return valid(p)&&(p.locked||(onlyKey&&s.key!==onlyKey))};
-  act.forEach(s=>{const p=plan[s.key];if(keeps(s)&&p.id){used.add(p.id);if(last.includes(p.id))reps++}});
+  const cnt={poisson:0,'végé':0};
+  act.forEach(s=>{const p=plan[s.key];if(keeps(s)&&p.id){if(!p.rest){used.add(p.id);const r=byId(p.id);if(cnt[r.type]!=null)cnt[r.type]++}if(last.includes(p.id))reps++}});
+  // types imposés (quotas) répartis au hasard sur les créneaux à tirer
+  const free=act.filter(s=>!keeps(s)).map(s=>s.key),assign={};
+  const ok=(r,s)=>{const d=addDays(cur,s.day),school=s.day<5&&!dayInfo(d);return r.fav!==-1&&inSeason(r,d)&&!(S.maxT&&school&&s.when==='soir'&&totalT(r)>S.maxT)};
+  if(!onlyKey){const sh=act.filter(s=>!keeps(s)).sort(()=>Math.random()-.5);
+    [['poisson',S.minF],['végé',S.minV]].forEach(([t,m])=>{let k=cnt[t];
+      for(const s of sh){if(k>=m)break;if(assign[s.key])continue;if(lib.some(r=>r.type===t&&ok(r,s))){assign[s.key]=t;k++}}})}
   let prevType=null;
   act.forEach(s=>{
     const p=plan[s.key];
-    if(keeps(s)){prevType=p.id?byId(p.id).type:null;return}
+    if(keeps(s)){prevType=p.id&&!p.rest?byId(p.id).type:prevType;return}
+    const d=addDays(cur,s.day),school=s.day<5&&!dayInfo(d);
     let c=lib.filter(r=>!used.has(r.id));
-    if(onlyKey&&p){const f=c.filter(r=>r.id!==p.id);if(f.length)c=f}
-    if(reps>=S.rep){const f=c.filter(r=>!last.includes(r.id));if(f.length)c=f}
-    if(S.vary&&prevType){const f=c.filter(r=>r.type!==prevType);if(f.length)c=f}
+    if(onlyKey&&p&&p.id){c=narrow(c,r=>r.id!==p.id)}
+    c=narrow(c,r=>r.fav!==-1);
+    c=narrow(c,r=>inSeason(r,d));
+    if(S.maxT&&school&&s.when==='soir')c=narrow(c,r=>!totalT(r)||totalT(r)<=S.maxT);
+    if(assign[s.key])c=narrow(c,r=>r.type===assign[s.key]);
+    if(reps>=S.rep)c=narrow(c,r=>!last.includes(r.id));
+    if(S.vary&&prevType)c=narrow(c,r=>r.type!==prevType);
     if(!c.length)c=lib.slice();
-    const r=pick(c);used.add(r.id);if(last.includes(r.id))reps++;
+    const r=wpick(c);used.add(r.id);if(last.includes(r.id))reps++;
     plan[s.key]={id:r.id,locked:false};fresh.add(s.key);prevType=r.type;
   });
+  // restes : plat « grande quantité » le soir -> restes le lendemain midi
+  if(S.rest){const on=new Set(act.map(s=>s.key));
+    for(let i=0;i<6;i++){const sk=i+'-soir',mk=(i+1)+'-midi',ps=plan[sk],pm=plan[mk];
+      if(!on.has(sk)||!on.has(mk)||!ps||!ps.id)continue;const r=byId(ps.id);
+      if(pm&&pm.locked&&!pm.rest)continue;
+      if(assign[mk])continue;
+      if(onlyKey&&onlyKey!==sk&&!(onlyKey===mk))continue;
+      if(r&&r.big&&!(onlyKey===mk)){plan[mk]={id:r.id,rest:true,locked:false};fresh.add(mk)}
+      else if(pm&&pm.rest&&pm.id!==ps.id){delete plan[mk];const k=onlyKey;fill(mk,true);if(k)onlyKey=k}}}
   W().checked=[];save();if(!silent){render();setTimeout(()=>fresh.clear(),400)}
 }
 
@@ -423,7 +456,7 @@ function renderWeek(){
     if(p&&p.txt)return '<div class="slot"><span class="when">'+lab+'</span><span class="name">'+esc(p.txt)+'</span><span class="kc">repas libre</span><div class="row"><span class="tag t-libre">libre</span><span>'+ed+'<button class="ic" data-roll="'+s.key+'" aria-label="Tirer un plat à la place">'+ICON.roll+'</button></span></div></div>';
     if(!r)return '<div class="slot"><span class="when">'+lab+'</span><span class="name" style="color:var(--soft)">À tirer</span><div class="row"><span></span><span>'+ed+'<button class="ic" data-roll="'+s.key+'" aria-label="Tirer ce repas">'+ICON.roll+'</button></span></div></div>';
     const n=mealNut(r);
-    return '<div class="slot'+(fresh.has(s.key)?' new':'')+'"><div class="row"><span class="when">'+lab+'</span>'+(last.includes(r.id)?'<span class="rep">déjà sorti</span>':'')+'</div><button class="nm" data-open="'+esc(r.id)+'">'+esc(r.name)+'</button><span class="kc">≈ '+num(n.k)+' kcal · P '+num(n.p)+' g'+(r.prep||r.cook?' · '+((+r.prep||0)+(+r.cook||0))+' min':'')+'</span><div class="row"><span class="tag t-'+esc(r.type)+'">'+esc(r.type)+'</span><span>'+ed+'<button class="ic'+(p.locked?' on':'')+'" data-lock="'+s.key+'" aria-label="'+(p.locked?'Déverrouiller':'Garder')+' ce repas">'+(p.locked?ICON.lock:ICON.open)+'</button><button class="ic" data-roll="'+s.key+'" aria-label="Retirer ce repas">'+ICON.roll+'</button></span></div></div>';
+    return '<div class="slot'+(fresh.has(s.key)?' new':'')+'"><div class="row"><span class="when">'+lab+'</span>'+(last.includes(r.id)?'<span class="rep">déjà sorti</span>':'')+'</div><button class="nm" data-open="'+esc(r.id)+'">'+(p.rest?'Restes : ':'')+(r.fav===1?'❤️ ':'')+esc(r.name)+'</button><span class="kc">≈ '+num(n.k)+' kcal · P '+num(n.p)+' g'+(r.prep||r.cook?' · '+((+r.prep||0)+(+r.cook||0))+' min':'')+'</span><div class="row"><span class="tag t-'+(p.rest?'libre':esc(r.type))+'">'+(p.rest?'restes':esc(r.type))+'</span><span>'+ed+'<button class="ic'+(p.locked?' on':'')+'" data-lock="'+s.key+'" aria-label="'+(p.locked?'Déverrouiller':'Garder')+' ce repas">'+(p.locked?ICON.lock:ICON.open)+'</button><button class="ic" data-roll="'+s.key+'" aria-label="Retirer ce repas">'+ICON.roll+'</button></span></div></div>';
   }).join('')+'</div>'}).join('');
 }
 function fmt(q,u){
@@ -480,12 +513,12 @@ function renderCal(){
   $('cal').innerHTML='<tr><th>Sem.</th>'+['L','M','M','J','V','S','D'].map(d=>'<th>'+d+'</th>').join('')+'</tr>'+rows;
 }
 function renderSide(){
-  $('adults').value=S.adults;$('kids').value=S.kids;$('kidf').value=S.kidf;$('wklunch').checked=S.wklunch;$('hol').checked=S.hol;$('wed').checked=S.wed;$('rep').value=S.rep;$('repv').textContent=S.rep;$('vary').checked=S.vary;
+  $('adults').value=S.adults;$('kids').value=S.kids;$('kidf').value=S.kidf;$('wklunch').checked=S.wklunch;$('hol').checked=S.hol;$('wed').checked=S.wed;$('rep').value=S.rep;$('repv').textContent=S.rep;$('vary').checked=S.vary;$('minF').value=S.minF;$('minV').value=S.minV;$('maxT').value=String(S.maxT);$('season').checked=S.season;$('rest').checked=S.rest;
   const pm=addDays(cur,-7);$('lasttitle').textContent='Semaine précédente (S'+iso(pm).w+')';
   const ids=[...new Set(prevIds())];
   $('last').innerHTML=ids.length?ids.map(byId).filter(Boolean).map(r=>'<span class="chip" style="padding-right:12px">'+esc(r.name)+'</span>').join(''):'<span class="hint">Pas de menus tirés la semaine précédente.</span>';
   $('count').textContent='('+lib.length+')';
-  $('lib').innerHTML=lib.map(r=>'<span class="chip"><span class="t-'+esc(r.type)+'">●</span><button class="nm" data-open="'+esc(r.id)+'">'+esc(r.name)+'</button><button class="ic" data-del="'+esc(r.id)+'" aria-label="Supprimer '+esc(r.name)+'">'+ICON.x+'</button></span>').join('');
+  $('lib').innerHTML=lib.map(r=>'<span class="chip"><span class="t-'+esc(r.type)+'">●</span><button class="nm" data-open="'+esc(r.id)+'">'+(r.fav===1?'❤️ ':r.fav===-1?'👎 ':'')+esc(r.name)+'</button><button class="ic" data-del="'+esc(r.id)+'" aria-label="Supprimer '+esc(r.name)+'">'+ICON.x+'</button></span>').join('');
 }
 function render(){renderHead();renderWeek();renderShop();renderNut();renderCal();renderSide()}
 function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('show'),2000)}
@@ -512,7 +545,7 @@ function importRows(rows){
   const find=(re,d)=>{const i=h.findIndex(c=>re.test(c));return i>=0?i:d};
   const hasHead=h.some(c=>/plat|menu|recette|ingredient/.test(c));
   const C={plat:find(/plat|menu|recette/,0),type:find(/type|cat/,1),q:find(/quant|qte|qt/,2),u:find(/unit/,3),n:find(/ingred|produit|aliment/,4),r:find(/rayon/,5),
-    k:find(/kcal|calor|energ/,6),p:find(/prot/,7),g:find(/gluc|carb/,8),l:find(/lipid|gras/,9),w:find(/piece|poids/,10),prep:find(/prep|temps/,-1),cook:find(/cuisson/,-1),url:find(/lien|url|source/,-1),st:find(/etape|instruction/,-1)};
+    k:find(/kcal|calor|energ/,6),p:find(/prot/,7),g:find(/gluc|carb/,8),l:find(/lipid|gras/,9),w:find(/piece|poids/,10),prep:find(/prep|temps/,-1),cook:find(/cuisson/,-1),url:find(/lien|url|source/,-1),st:find(/etape|instruction/,-1),sea:find(/saison/,-1),fav:find(/favori|avis|note/,-1),big:find(/restes?$|grande/,-1)};
   const out=[];let curR=null;
   (hasHead?rows.slice(1):rows).forEach(r=>{
     const name=String(r[C.plat]??'').trim();
@@ -520,6 +553,9 @@ function importRows(rows){
       const cell=i=>i>=0?String(r[i]??'').trim():'';
       if(fnum(cell(C.prep))!=null)curR.prep=fnum(cell(C.prep));if(fnum(cell(C.cook))!=null)curR.cook=fnum(cell(C.cook));
       if(/^https?:\/\//i.test(cell(C.url)))curR.url=cell(C.url);
+      const se=lc(cell(C.sea)).normalize('NFD').replace(/[\u0300-\u036f]/g,'');if(/ete|summer/.test(se))curR.season='ete';else if(/hiver|winter/.test(se))curR.season='hiver';
+      const fv=lc(cell(C.fav));if(/oui|favori|❤|coeur|cœur|1/.test(fv))curR.fav=1;else if(/eviter|éviter|non|👎|-1/.test(fv))curR.fav=-1;
+      if(/oui|x|1|vrai/.test(lc(cell(C.big))))curR.big=true;
       const st=cell(C.st).split(/\n|\s*;\s*|\s+\/\s+/).map(x=>x.trim()).filter(Boolean);if(st.length)curR.steps=st;
       out.push(curR)}
     const n=String(r[C.n]??'').trim();if(!curR||!n)return;
@@ -539,7 +575,7 @@ function handleFile(file){
     if(!recs.length)throw new Error('Aucun plat trouvé : vérifie les colonnes');
     const mode=document.querySelector('input[name=mode]:checked').value;
     const mk=(r,i)=>Object.assign({id:'f'+Date.now()+'_'+i},r);
-    if(mode==='replace'){lib=recs.map(mk)}else{recs.forEach((r,i)=>{const ex=lib.find(x=>x.name.toLowerCase()===r.name.toLowerCase());if(ex){ex.type=r.type;ex.ing=r.ing;['prep','cook','url','steps'].forEach(k=>{if(r[k]!=null)ex[k]=r[k]})}else lib.push(mk(r,i))})}
+    if(mode==='replace'){lib=recs.map(mk)}else{recs.forEach((r,i)=>{const ex=lib.find(x=>x.name.toLowerCase()===r.name.toLowerCase());if(ex){ex.type=r.type;ex.ing=r.ing;['prep','cook','url','steps','season','fav','big'].forEach(k=>{if(r[k]!=null)ex[k]=r[k]})}else lib.push(mk(r,i))})}
     Object.values(weeks).forEach(w=>Object.keys(w.plan).forEach(k=>{if(!byId(w.plan[k].id))delete w.plan[k]}));
     save();render();msg.textContent=recs.length+' plat'+(recs.length>1?'s':'')+' importé'+(recs.length>1?'s':'')+' depuis « '+file.name+' ».';
   }catch(err){msg.textContent='Import impossible : '+err.message;msg.style.color='var(--tomato-ink)'}};
@@ -587,15 +623,19 @@ function renderRv(edit){
   const head='<div class="row"><h2 id="rvt">'+esc(r.name)+'</h2><button class="ic" data-rv="close" aria-label="Fermer">'+ICON.x+'</button></div>';
   if(!edit){
     const f=factor(),url=/^https?:\/\//i.test(r.url||'')?r.url:'';
-    b.innerHTML=head+'<div class="meta"><span class="tag t-'+esc(r.type)+'">'+esc(r.type)+'</span>'+(r.prep?'<span>Préparation '+num(+r.prep)+' min</span>':'')+(r.cook?'<span>Cuisson '+num(+r.cook)+' min</span>':'')+(url?'<a href="'+esc(url)+'" target="_blank" rel="noopener">Recette d\'origine ↗</a>':'')+'</div>'+
+    b.innerHTML=head+'<div class="meta"><span class="tag t-'+esc(r.type)+'">'+esc(r.type)+'</span>'+(r.prep?'<span>Préparation '+num(+r.prep)+' min</span>':'')+(r.cook?'<span>Cuisson '+num(+r.cook)+' min</span>':'')+(r.season&&r.season!=='toute'?'<span class="hol">'+(r.season==='ete'?'Été':'Hiver')+'</span>':'')+(r.big?'<span class="hol">Grande quantité · restes</span>':'')+(url?'<a href="'+esc(url)+'" target="_blank" rel="noopener">Recette d\'origine ↗</a>':'')+'</div>'+
       '<h3>Ingrédients <span class="hint">pour le foyer ('+num(f,1)+' portions adulte)</span></h3><ul class="ingl">'+r.ing.map(i=>'<li><span>'+esc(i[2])+'</span><b>'+fmt(i[0]*f,i[1])+'</b></li>').join('')+'</ul>'+
       '<h3>Préparation</h3>'+(r.steps&&r.steps.length?'<ol class="steps">'+r.steps.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ol>':'<p class="hint">Pas encore d\'étapes : clique sur « Modifier » pour les ajouter.</p>')+
+      '<div class="actions" style="margin-top:8px"><button class="btn'+(r.fav===1?' main':'')+'" data-rv="fav" aria-pressed="'+(r.fav===1)+'">❤️ Favori</button><button class="btn'+(r.fav===-1?' main':'')+'" data-rv="avoid" aria-pressed="'+(r.fav===-1)+'">👎 À éviter</button></div>'+
+      '<p class="hint" style="margin:6px 0 0">Favori : tiré 3 fois plus souvent. À éviter : jamais tiré automatiquement (reste disponible avec le crayon).</p>'+
       '<div class="actions" style="margin-top:8px"><button class="btn main" data-rv="edit">Modifier la recette</button><button class="btn" data-rv="close">Fermer</button></div>';
   }else{
     b.innerHTML=head+'<form id="rvf" style="margin:0">'+
       '<label class="f">Nom<input type="text" name="name" required value="'+esc(r.name)+'"></label>'+
       '<div class="g3"><label class="f">Type<select name="type">'+['viande','poisson','végé'].map(t=>'<option'+(t===r.type?' selected':'')+'>'+t+'</option>').join('')+'</select></label>'+
       '<label class="f">Préparation (min)<input type="number" min="0" name="prep" value="'+esc(r.prep??'')+'"></label><label class="f">Cuisson (min)<input type="number" min="0" name="cook" value="'+esc(r.cook??'')+'"></label></div>'+
+      '<div class="g3"><label class="f">Saison<select name="season">'+[['toute','Toute l\'année'],['ete','Été'],['hiver','Hiver']].map(([v,l])=>'<option value="'+v+'"'+((r.season||'toute')===v?' selected':'')+'>'+l+'</option>').join('')+'</select></label>'+
+      '<label class="f" style="grid-column:span 2;display:flex;align-items:center;gap:10px;font-weight:600"><input type="checkbox" name="big"'+(r.big?' checked':'')+' style="width:22px;height:22px;accent-color:var(--tomato)">Grande quantité : prévoir les restes le lendemain midi</label></div>'+
       '<label class="f">Lien vers la recette<input type="url" name="url" placeholder="https://…" value="'+esc(r.url||'')+'"></label>'+
       '<label class="f">Ingrédients pour 1 adulte, un par ligne<textarea name="ing">'+esc(r.ing.map(ingLine).join('\n'))+'</textarea></label>'+
       '<label class="f">Étapes, une par ligne<textarea name="steps">'+esc((r.steps||[]).join('\n'))+'</textarea></label>'+
@@ -603,13 +643,16 @@ function renderRv(edit){
     b.querySelector('[name=name]').focus();
   }
 }
-$('rvb').addEventListener('click',e=>{const a=e.target.closest('[data-rv]');if(!a)return;const v=a.dataset.rv;if(v==='close')closeRv();else renderRv(v==='edit')});
+$('rvb').addEventListener('click',e=>{const a=e.target.closest('[data-rv]');if(!a)return;const v=a.dataset.rv;if(v==='close')return closeRv();
+  if(v==='fav'||v==='avoid'){const r=byId(rvId),t=v==='fav'?1:-1;r.fav=r.fav===t?0:t;save();render();renderRv(false);return}
+  renderRv(v==='edit')});
 $('rvb').addEventListener('submit',e=>{e.preventDefault();const r=byId(rvId),fd=new FormData(e.target);if(!r)return;
   const old={};r.ing.forEach(i=>old[lc(i[2])]=i);
   r.name=String(fd.get('name')).trim()||r.name;r.type=fd.get('type');
   const pn=fnum(fd.get('prep')),cn=fnum(fd.get('cook'));if(pn!=null)r.prep=pn;else delete r.prep;if(cn!=null)r.cook=cn;else delete r.cook;
   const u=String(fd.get('url')).trim();if(/^https?:\/\//i.test(u))r.url=u;else delete r.url;
   r.ing=parseLines(String(fd.get('ing'))).map(i=>{const o=old[lc(i[2])];if(o){i[3]=o[3];if(o[4])i[4]=o[4]}return i});
+  r.season=fd.get('season')==='toute'?undefined:fd.get('season');if(!r.season)delete r.season;r.big=!!fd.get('big');
   r.steps=String(fd.get('steps')).split('\n').map(x=>x.trim()).filter(Boolean);
   save();render();renderRv(false);toast('Recette enregistrée')});
 $('rv').addEventListener('click',e=>{if(e.target===$('rv'))closeRv()});
@@ -639,6 +682,11 @@ $('wklunch').addEventListener('change',e=>{S.wklunch=e.target.checked;save();ren
 $('hol').addEventListener('change',e=>{S.hol=e.target.checked;save();render()});
 $('wed').addEventListener('change',e=>{S.wed=e.target.checked;save();render()});
 $('vary').addEventListener('change',e=>{S.vary=e.target.checked;save()});
+$('minF').addEventListener('input',e=>{S.minF=Math.max(0,Math.min(7,parseInt(e.target.value)||0));save()});
+$('minV').addEventListener('input',e=>{S.minV=Math.max(0,Math.min(7,parseInt(e.target.value)||0));save()});
+$('maxT').addEventListener('change',e=>{S.maxT=parseInt(e.target.value)||0;save()});
+$('season').addEventListener('change',e=>{S.season=e.target.checked;save()});
+$('rest').addEventListener('change',e=>{S.rest=e.target.checked;save()});
 $('lib').addEventListener('click',e=>{const o=e.target.closest('[data-open]');if(o)return openRv(o.dataset.open);const b=e.target.closest('[data-del]');if(!b)return;if(lib.length<=1)return toast('Garde au moins un menu');
   const id=b.dataset.del;lib=lib.filter(r=>r.id!==id);Object.values(weeks).forEach(w=>Object.keys(w.plan).forEach(k=>{if(w.plan[k].id===id)delete w.plan[k]}));save();render()});
 $('add').addEventListener('submit',e=>{e.preventDefault();const n=$('nname').value.trim();if(!n)return;
