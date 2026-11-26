@@ -162,8 +162,8 @@ textarea{min-height:100px;resize:vertical}
 .bud{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;margin:10px 0 6px}.bud b{font-family:"Baloo 2",sans-serif;font-size:clamp(40px,5vw,54px);line-height:1;white-space:nowrap}
 .bud span{color:var(--soft);font-size:15px}
 .meter{height:14px;border-radius:99px;background:var(--line);overflow:hidden;margin:6px 0 4px}.meter i{display:block;height:100%;border-radius:99px}
-.bry{display:grid;grid-template-columns:minmax(0,11em) minmax(0,1fr) auto;gap:8px;align-items:center;font-size:14px}
-.bry .b{height:10px;border-radius:99px;background:var(--tomato);opacity:.85}
+.bry{display:grid;grid-template-columns:10.5em minmax(0,1fr) 3.6em;gap:8px;align-items:center;font-size:14px}
+.bry .trk{display:block}.bry .b{display:block;height:10px;border-radius:99px;background:var(--tomato);opacity:.85}
 .bry .v{font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums;text-align:right}
 .list .pr{all:unset;cursor:pointer;font-size:13px;color:var(--soft);white-space:nowrap;padding:4px 6px;border-radius:8px;font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
 .list .pr:hover{background:var(--wash);color:var(--ink)}.list .pr:focus-visible{outline:3px solid var(--tomato-ink)}.list .pr.no{color:var(--tomato-ink)}
@@ -207,21 +207,21 @@ textarea{min-height:100px;resize:vertical}
       <div id="shop"></div>
       <details id="pan"><summary id="pansum"></summary><p class="hint" style="margin:4px 0 8px">Ces ingrédients sont retirés de la liste tant qu'ils sont ici. Clique sur la maison d'un article pour l'y ajouter.</p><div class="lib" id="panl" style="margin:0"></div></details>
     </section>
-    <section class="panel">
-      <h2>Courses de chaque semaine</h2>
-      <p class="hint" style="margin:-6px 0 8px">Petit-déjeuners, goûters, produits du quotidien : ajoutés automatiquement à la liste de chaque semaine.</p>
-      <div id="recl"></div>
-      <form class="inrow" id="radd"><input type="text" id="rn" placeholder="Article (ex : céréales)" autocomplete="off" required><input type="text" id="rq" placeholder="Quantité (ex : 2 paquets)" autocomplete="off" style="flex:1 1 140px"><button class="btn" type="submit">Ajouter</button></form>
+    <section class="panel" id="budp">
+      <div class="row"><h2 style="margin:0">Budget de la semaine</h2><span class="pill off" id="bweek"></span></div>
+      <div class="bud"><b id="btot"></b><span id="bsub"></span></div>
+      <div id="bbar"></div>
+      <div id="bry" style="margin-top:12px;display:grid;gap:6px"></div>
+      <div class="field" style="margin-top:8px"><span>Budget visé par semaine (€) <span class="hint">0 = pas d'objectif</span></span><input type="number" id="btarget" min="0" step="5"></div>
+      <p class="note" id="bnote"></p>
     </section>
     </div>
     <div class="stackc">
-      <section class="panel" id="budp">
-        <div class="row"><h2 style="margin:0">Budget de la semaine</h2><span class="pill off" id="bweek"></span></div>
-        <div class="bud"><b id="btot"></b><span id="bsub"></span></div>
-        <div id="bbar"></div>
-        <div class="leg" id="bry" style="margin-top:12px"></div>
-        <div class="field" style="margin-top:8px"><span>Budget visé par semaine (€) <span class="hint">0 = pas d'objectif</span></span><input type="number" id="btarget" min="0" step="5"></div>
-        <p class="note" id="bnote"></p>
+      <section class="panel">
+        <h2>Courses de chaque semaine <span style="font-family:Nunito,sans-serif;font-size:17px;font-weight:600;color:var(--soft)">(achats récurrents)</span></h2>
+        <p class="hint" style="margin:-6px 0 8px">Petit-déjeuners, goûters, produits du quotidien : ajoutés automatiquement à la liste de chaque semaine.</p>
+        <div id="recl"></div>
+        <form class="inrow" id="radd"><input type="text" id="rn" placeholder="Article (ex : céréales)" autocomplete="off" required><input type="text" id="rq" placeholder="Quantité (ex : 2 paquets)" autocomplete="off" style="flex:1 1 140px"><button class="btn" type="submit">Ajouter</button></form>
       </section>
       <section class="panel">
         <h2>Apports nutritionnels</h2>
@@ -568,7 +568,7 @@ function renderBud(){
   const T=+S.budget||0;
   $('bbar').innerHTML=T?'<div class="meter"><i style="width:'+Math.min(100,tot/T*100)+'%;background:'+(tot>T?'var(--tomato)':'var(--basil)')+'"></i></div><div class="hint">'+(tot>T?'Dépassement de '+money(tot-T,0)+' sur '+money(T,0):'Il reste '+money(T-tot,0)+' sur '+money(T,0))+'</div>':'';
   const mx=Math.max(1,...Object.values(by));
-  $('bry').innerHTML=ORDER.filter(k=>by[k]).map(k=>'<div class="bry"><span>'+R[k]+'</span><span class="b" style="width:'+(by[k]/mx*100)+'%"></span><span class="v">'+money(by[k],0)+'</span></div>').join('');
+  $('bry').innerHTML=ORDER.filter(k=>by[k]).map(k=>'<div class="bry"><span>'+R[k]+'</span><span class="trk"><span class="b" style="width:'+(by[k]/mx*100)+'%"></span></span><span class="v">'+money(by[k],0)+'</span></div>').join('');
   $('btarget').value=T||'';
   const m=HOUSE.members||[];
   $('bnote').textContent=(m.length===2&&tot?'Partagé à deux : ≈ '+money(tot/2,0)+' chacun. ':'')+'Prix moyens indicatifs de supermarché, à ajuster : touche un prix dans la liste pour le modifier.'+(miss?' '+miss+' article'+(miss>1?'s':'')+' sans prix (« ? € »).':'');
