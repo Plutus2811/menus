@@ -282,7 +282,8 @@ textarea{min-height:100px;resize:vertical}
       <div class="field"><span>Au moins ce nombre de repas <b>végé</b> par semaine</span><input type="number" id="minV" min="0" max="7"></div>
       <div class="field"><span>Temps maximum les soirs d'école <span class="hint">(préparation + cuisson)</span></span><select id="maxT" style="min-height:44px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);padding:0 8px;font-size:16px"><option value="0">Pas de limite</option><option value="20">20 min</option><option value="30">30 min</option><option value="45">45 min</option><option value="60">1 h</option></select></div>
       <div class="field"><span>Respecter les saisons <span class="hint">(été : avril à septembre)</span></span><input type="checkbox" id="season"></div>
-      <div class="field"><span>Prévoir les restes le lendemain midi <span class="hint">(plats « grande quantité »)</span></span><input type="checkbox" id="rest"></div>
+      <div class="field"><span>Prévoir les restes le lendemain midi <span class="hint">(plats de pâtes ou de pommes de terre « grande quantité »)</span></span><input type="checkbox" id="rest"></div>
+      <div class="field"><span>Un plat de pâtes ou de pommes de terre peut revenir 2 fois dans la semaine <span class="hint">(tous les autres plats : une seule fois)</span></span><input type="checkbox" id="twice"></div>
       <h3 style="margin-top:14px;font-size:18px" id="lasttitle">Semaine précédente</h3>
       <div class="last" id="last"></div>
     </section>
@@ -422,7 +423,7 @@ function mcol(a){const i=HOUSE.members.indexOf(a);return i<0?'var(--soft)':MCOL[
 function deN(a){return (/^[aeiouyhéèêàâîôû]/i.test(a)?'d\'':'de ')+a}
 function badge(a){return a?'<span class="who" style="background:'+mcol(a)+'" title="Recette '+esc(deN(a))+'">'+esc(a.charAt(0).toUpperCase())+'</span>':''}
 let HOUSE=Object.assign({members:['David','Alex'],prices:{},prod:{},ry:{},pantry:[],recur:[{n:'lait',q:'4 l',ry:'cr'},{n:'céréales',q:'1 paquet',ry:'ep'},{n:'compotes',q:'12',ry:'ep'},{n:'biscuits pour le goûter',q:'2 paquets',ry:'ep'},{n:'fruits',q:'2 kg',ry:'fl'}]},store.get('house',{}));
-let S=Object.assign({budget:0,adults:2,kids:2,kidf:.6,wklunch:false,hol:true,wed:false,rep:2,vary:true,minF:1,minV:1,maxT:0,rest:true,season:true},store.get('settings',{}));
+let S=Object.assign({twice:true,budget:0,adults:2,kids:2,kidf:.6,wklunch:false,hol:true,wed:false,rep:2,vary:true,minF:1,minV:1,maxT:0,rest:true,season:true},store.get('settings',{}));
 // Vacances scolaires zone C (Paris), jours sans classe inclus (veille de reprise comprise)
 const ZC=[['2025-10-18','2025-11-02','Toussaint'],['2025-12-20','2026-01-04','Noël'],['2026-02-21','2026-03-08','Hiver'],['2026-04-18','2026-05-03','Printemps'],['2026-05-14','2026-05-17','Pont de l\'Ascension'],['2026-07-04','2026-08-31','Été'],
 ['2026-10-17','2026-11-01','Toussaint'],['2026-12-19','2027-01-03','Noël'],['2027-02-06','2027-02-21','Hiver'],['2027-04-03','2027-04-18','Printemps'],['2027-05-06','2027-05-09','Pont de l\'Ascension'],['2027-07-03','2027-09-01','Été'],
@@ -473,11 +474,13 @@ const SUMMER=m=>m>=3&&m<=8; // avril (3) à septembre (8)
 function inSeason(r,d){if(!S.season||!r.season||r.season==='toute')return true;return r.season==='ete'?SUMMER(d.getMonth()):!SUMMER(d.getMonth())}
 function wpick(c){const w=c.map(r=>r.fav===1?3:1),t=w.reduce((a,b)=>a+b,0);let x=Math.random()*t;for(let i=0;i<c.length;i++){x-=w[i];if(x<0)return c[i]}return c[c.length-1]}
 const narrow=(c,f)=>{const n=c.filter(f);return n.length?n:c};
+// plats qui peuvent revenir 2 fois dans la semaine : pâtes ou pommes de terre
+function twice(r){return !!r&&((r.tags||[]).includes('Pâtes')||/p[aâ]tes|spaghetti|coquillette|lasagne|gnocchi|crozet|nouilles|pommes? de terre|pur[ée]e|frites|dauphinois|tartiflette|parmentier|raclette/i.test(r.name))}
 function fill(onlyKey,silent){
   const plan=W().plan,last=prevIds(),act=slots().filter(s=>s.on),used=new Set();let reps=0;
   const keeps=s=>{const p=plan[s.key];return valid(p)&&(p.locked||(onlyKey&&s.key!==onlyKey))};
-  const cnt={poisson:0,'végé':0};
-  act.forEach(s=>{const p=plan[s.key];if(keeps(s)&&p.id){if(!p.rest){used.add(p.id);const r=byId(p.id);if(cnt[r.type]!=null)cnt[r.type]++}if(last.includes(p.id))reps++}});
+  const cnt={poisson:0,'végé':0},usedN={};
+  act.forEach(s=>{const p=plan[s.key];if(keeps(s)&&p.id){usedN[p.id]=(usedN[p.id]||0)+1;if(!p.rest){used.add(p.id);const r=byId(p.id);if(cnt[r.type]!=null)cnt[r.type]++}if(last.includes(p.id))reps++}});
   // types imposés (quotas) répartis au hasard sur les créneaux à tirer
   const free=act.filter(s=>!keeps(s)).map(s=>s.key),assign={};
   const ok=(r,s)=>{const d=addDays(cur,s.day),school=s.day<5&&!dayInfo(d);return r.fav!==-1&&inSeason(r,d)&&!(S.maxT&&school&&s.when==='soir'&&totalT(r)>S.maxT)};
@@ -489,7 +492,7 @@ function fill(onlyKey,silent){
     const p=plan[s.key];
     if(keeps(s)){prevType=p.id&&!p.rest?byId(p.id).type:prevType;return}
     const d=addDays(cur,s.day),school=s.day<5&&!dayInfo(d);
-    let c=lib.filter(r=>!used.has(r.id));
+    let c=lib.filter(r=>!used.has(r.id)||(S.twice&&twice(r)&&usedN[r.id]<2));
     if(onlyKey&&p&&p.id){c=narrow(c,r=>r.id!==p.id)}
     c=narrow(c,r=>r.fav!==-1);
     c=narrow(c,r=>inSeason(r,d));
@@ -497,8 +500,9 @@ function fill(onlyKey,silent){
     if(assign[s.key])c=narrow(c,r=>r.type===assign[s.key]);
     if(reps>=S.rep)c=narrow(c,r=>!last.includes(r.id));
     if(S.vary&&prevType)c=narrow(c,r=>r.type!==prevType);
+    if(Math.random()<.75)c=narrow(c,r=>!used.has(r.id)); // un 2e plat de pâtes / pommes de terre reste occasionnel
     if(!c.length)c=lib.slice();
-    const r=wpick(c);used.add(r.id);if(last.includes(r.id))reps++;
+    const r=wpick(c);used.add(r.id);usedN[r.id]=(usedN[r.id]||0)+1;if(last.includes(r.id))reps++;
     plan[s.key]={id:r.id,locked:false};fresh.add(s.key);prevType=r.type;
   });
   // restes : plat « grande quantité » le soir -> restes le lendemain midi
@@ -508,7 +512,8 @@ function fill(onlyKey,silent){
       if(pm&&pm.locked&&!pm.rest)continue;
       if(assign[mk])continue;
       if(onlyKey&&onlyKey!==sk&&!(onlyKey===mk))continue;
-      if(r&&r.big&&!(onlyKey===mk)){plan[mk]={id:r.id,rest:true,locked:false};fresh.add(mk)}
+      const occ=r?Object.keys(plan).filter(k=>k!==mk&&on.has(k)&&plan[k]&&plan[k].id===r.id).length:0;
+      if(r&&r.big&&twice(r)&&occ<2&&!(onlyKey===mk)){plan[mk]={id:r.id,rest:true,locked:false};fresh.add(mk)}
       else if(pm&&pm.rest&&pm.id!==ps.id){delete plan[mk];const k=onlyKey;fill(mk,true);if(k)onlyKey=k}}}
   W().checked=[];save();if(!silent){render();setTimeout(()=>fresh.clear(),400)}
 }
@@ -653,7 +658,7 @@ function renderCal(){
   $('cal').innerHTML='<tr><th>Sem.</th>'+['L','M','M','J','V','S','D'].map(d=>'<th>'+d+'</th>').join('')+'</tr>'+rows;
 }
 function renderSide(){
-  $('adults').value=S.adults;$('kids').value=S.kids;$('kidf').value=S.kidf;$('wklunch').checked=S.wklunch;$('hol').checked=S.hol;$('wed').checked=S.wed;$('rep').value=S.rep;$('repv').textContent=S.rep;$('vary').checked=S.vary;$('minF').value=S.minF;$('minV').value=S.minV;$('maxT').value=String(S.maxT);$('season').checked=S.season;$('rest').checked=S.rest;
+  $('adults').value=S.adults;$('kids').value=S.kids;$('kidf').value=S.kidf;$('wklunch').checked=S.wklunch;$('hol').checked=S.hol;$('wed').checked=S.wed;$('rep').value=S.rep;$('repv').textContent=S.rep;$('vary').checked=S.vary;$('minF').value=S.minF;$('minV').value=S.minV;$('maxT').value=String(S.maxT);$('season').checked=S.season;$('rest').checked=S.rest;$('twice').checked=S.twice;
   const pm=addDays(cur,-7);$('lasttitle').textContent='Semaine précédente (S'+iso(pm).w+')';
   const ids=[...new Set(prevIds())];
   $('last').innerHTML=ids.length?ids.map(byId).filter(Boolean).map(r=>'<span class="chip" style="padding-right:12px">'+esc(r.name)+'</span>').join(''):'<span class="hint">Pas de menus tirés la semaine précédente.</span>';
@@ -879,6 +884,7 @@ $('minV').addEventListener('input',e=>{S.minV=Math.max(0,Math.min(7,parseInt(e.t
 $('maxT').addEventListener('change',e=>{S.maxT=parseInt(e.target.value)||0;save()});
 $('season').addEventListener('change',e=>{S.season=e.target.checked;save()});
 $('rest').addEventListener('change',e=>{S.rest=e.target.checked;save()});
+$('twice').addEventListener('change',e=>{S.twice=e.target.checked;save()});
 $('me').addEventListener('click',e=>{const b=e.target.closest('[data-me]');if(!b)return;ME=ME===b.dataset.me?null:b.dataset.me;store.set('me',ME);renderMe();toast(ME?'Cet appareil est celui '+deN(ME):'Personne n\'est choisi sur cet appareil')});
 $('libbk').addEventListener('click',e=>{const b=e.target.closest('[data-bk]');if(!b)return;const bk=store.get('libBackup',{recs:[]}).recs||[];
   if(b.dataset.bk==='restore'){let n=0;bk.forEach(r=>{if(!lib.some(x=>x.id===r.id||(lc(x.name)===lc(r.name)&&x.author===r.author))){lib.push(r);n++}});toast(n+' recette'+(n>1?'s':'')+' récupérée'+(n>1?'s':''))}
