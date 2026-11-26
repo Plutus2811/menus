@@ -178,6 +178,9 @@ textarea{min-height:100px;resize:vertical}
 .ttl span{display:inline-block;animation:ttlon .45s ease-out backwards}
 @keyframes ttlon{from{opacity:.1}to{opacity:1}}
 @media (prefers-reduced-motion:reduce){.ttl span{animation:none}}
+.tagf button{min-height:34px;padding:0 12px;font-size:14px;font-weight:600}
+.ctag{display:inline-block;font-size:13px;font-weight:700;padding:2px 10px;border-radius:99px;background:var(--wash);color:var(--ink)}
+.tsel{display:flex;flex-wrap:wrap;gap:6px}.tsel label{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:99px;border:1.5px solid var(--line);font-weight:600;font-size:14px;cursor:pointer}.tsel input{accent-color:var(--tomato);width:16px;height:16px}
 .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:12px;font-weight:700;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.show{opacity:1}
 @media(max-width:1100px){.week{grid-template-columns:repeat(4,minmax(0,1fr))}}
@@ -282,6 +285,7 @@ textarea{min-height:100px;resize:vertical}
       <h2 style="margin-bottom:8px">Bibliothèque de menus</h2>
       <div class="libc" id="count" aria-live="polite"></div>
       <div class="seg" id="libf" style="margin-top:12px" role="group" aria-label="Filtrer par auteur"></div>
+      <div class="seg tagf" id="libt" style="margin-top:8px" role="group" aria-label="Filtrer par catégorie"></div>
       <div class="lib" id="lib"></div>
       <form id="add">
         <div class="two">
@@ -293,7 +297,7 @@ textarea{min-height:100px;resize:vertical}
       </form>
       <div class="imp">
         <h3 style="font-size:20px">Importer depuis un fichier .ods</h3>
-        <p class="hint" style="margin:4px 0 8px">Une ligne par ingrédient, quantités pour 1 adulte. Laisse « Plat » vide pour continuer le plat du dessus. Les colonnes nutritionnelles (pour 100 g) sont facultatives, comme Préparation (min), Cuisson (min), Lien, Étapes (séparées par « ; »), Saison (été / hiver), Favori (oui / éviter), Restes (oui) et Auteur (David / Alex), à remplir sur la ligne du plat. Sans colonne Auteur, les recettes prennent le prénom choisi ci-dessous. Fonctionne aussi avec .xlsx et .csv.</p>
+        <p class="hint" style="margin:4px 0 8px">Une ligne par ingrédient, quantités pour 1 adulte. Laisse « Plat » vide pour continuer le plat du dessus. Les colonnes nutritionnelles (pour 100 g) sont facultatives, comme Préparation (min), Cuisson (min), Lien, Étapes (séparées par « ; »), Saison (été / hiver), Favori (oui / éviter), Restes (oui), Auteur (David / Alex) et Catégories (séparées par des virgules), à remplir sur la ligne du plat. Sans colonne Auteur, les recettes prennent le prénom choisi ci-dessous. Fonctionne aussi avec .xlsx et .csv.</p>
         <div class="scroll"><table class="ex"><tr><th>Plat</th><th>Type</th><th>Quantité</th><th>Unité</th><th>Ingrédient</th><th>Rayon</th><th>kcal</th><th>Protéines</th><th>Glucides</th><th>Lipides</th><th>g/pièce</th></tr>
         <tr><td>Lasagnes</td><td>viande</td><td>100</td><td>g</td><td>bœuf haché</td><td>Boucherie</td><td></td><td></td><td></td><td></td><td></td></tr>
         <tr><td></td><td></td><td>3</td><td>pièce</td><td>feuilles de lasagne</td><td>Épicerie</td><td>350</td><td>12</td><td>70</td><td>1.5</td><td>20</td></tr></table></div>
@@ -313,7 +317,7 @@ textarea{min-height:100px;resize:vertical}
 <div class="ov" id="ov" hidden>
   <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="edt">
     <div class="row"><h2 id="edt"></h2><button class="ic" id="edx" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
-    <input type="search" id="eds" placeholder="Chercher un plat de la bibliothèque" autocomplete="off">
+    <input type="search" id="eds" placeholder="Chercher un plat ou une catégorie (soupes, gratins…)" autocomplete="off">
     <div class="edl" id="edl"></div>
     <div class="inrow" style="margin:0"><input type="text" id="edf" placeholder="Ou un repas libre : restes, resto, pique-nique…" autocomplete="off"><button class="btn" id="edfb">Valider</button></div>
     <button class="btn" id="edrm">Pas de repas à la maison</button>
@@ -381,7 +385,17 @@ const STEPS=[
 const EXTRA={"0": {"big": true}, "5": {"big": true}, "10": {"season": "ete"}, "12": {"big": true, "season": "hiver"}, "16": {"season": "hiver"}};
 const OLD1=["Émincer l'oignon et le faire revenir dans un peu d'huile.", "Préchauffer le four à 200 °C.", "Cuire le riz selon le paquet.", "Préchauffer le four à 200 °C et cuire les pâtes un peu fermes.", "Préchauffer le four à 180 °C et étaler la pâte dans un moule.", "Faire revenir l'oignon émincé.", "Préchauffer le four à 220 °C.", "Cuire les pommes de terre épluchées 20 min dans l'eau salée.", "Rincer les lentilles corail.", "Couper le poulet et le poivron en lanières.", "Réchauffer la ratatouille.", "Préchauffer le four à 240 °C.", "Cuire les pommes de terre 20 min et les écraser en purée avec le lait.", "Émincer les champignons et les faire revenir.", "Couper les courgettes et les pommes de terre en morceaux.", "Chauffer une poêle et y poser la galette.", "Éplucher et couper les légumes.", "Cuire les frites au four selon le paquet."];
 DEF.forEach((r,i)=>{const t=STEPS[i];if(t){r.prep=t[0];r.cook=t[1];r.steps=t[2]}Object.assign(r,EXTRA[i]||{});r.m2=1;r.m3=1});
-function migrate(){let ch=false;lib.forEach(r=>{const m=/^d(\d+)$/.exec(r.id);const t=m&&STEPS[+m[1]];if(t&&!r.steps&&DEF[+m[1]].name===r.name){r.prep=t[0];r.cook=t[1];r.steps=t[2];ch=true}});lib.forEach(r=>{const m=/^d(\d+)$/.exec(r.id),i=m&&+m[1];if(m&&DEF[i]&&!r.m3&&DEF[i].name===r.name&&r.steps&&r.steps[0]===OLD1[i]){r.ing=JSON.parse(JSON.stringify(DEF[i].ing));r.steps=STEPS[i][2].slice();r.prep=STEPS[i][0];r.cook=STEPS[i][1];r.m3=1;ch=true}});
+const TAGS=['Soupes','Gratins','Plats en sauce','Plats mijotés','Pâtes','Riz & céréales','Tartes & pizzas','Plats froids','Plats préparés','Grillades','Poêlées','Plats au four','Plats légers'];
+const TAGRULES=[[/soupe|velout|bouillon|gaspacho|minestrone/i,'Soupes'],[/gratin|hachis|lasagne|tartiflette|croziflette|dauphinois|parmentier/i,'Gratins'],
+ [/blanquette|bourguignon|basquaise|curry|chili|bolognaise|à la crème|caramel|couscous|lentilles et|aux lentilles|sauce/i,'Plats en sauce'],
+ [/blanquette|bourguignon|couscous|pois cassés|mijot/i,'Plats mijotés'],[/rôti|papillote|four/i,'Plats au four'],[/vapeur|papillote|moules/i,'Plats légers'],[/spaghetti|pâtes|lasagne|gnocchi|nouilles|crozets|ravioli/i,'Pâtes'],
+ [/riz|risotto|semoule|taboulé|lentilles|chili|couscous/i,'Riz & céréales'],[/quiche|tarte|pizza|galette/i,'Tartes & pizzas'],
+ [/salade|taboulé|gaspacho|wrap/i,'Plats froids'],[/poisson pané|cordon bleu|nuggets|surgel/i,'Plats préparés'],[/steak|brochette|burger|chipolata|merguez|grill/i,'Grillades'],
+ [/sauté|poêlée|tacos|cantonais|omelette|escalope/i,'Poêlées']];
+function autoTags(r){const t=[];TAGRULES.forEach(([re,g])=>{if(re.test(r.name)&&!t.includes(g))t.push(g)});return t}
+function allTags(){const set=new Set();lib.forEach(r=>(r.tags||[]).forEach(t=>set.add(t)));return [...set].sort((a,b)=>{const ia=TAGS.indexOf(a),ib=TAGS.indexOf(b);return (ia<0?99:ia)-(ib<0?99:ib)||a.localeCompare(b,'fr')})}
+let LIBT='all';
+function migrate(){let ch=false;lib.forEach(r=>{if(!r.tg){r.tg=1;if(!r.tags||!r.tags.length){const t=autoTags(r);if(t.length)r.tags=t}ch=true}});lib.forEach(r=>{const m=/^d(\d+)$/.exec(r.id);const t=m&&STEPS[+m[1]];if(t&&!r.steps&&DEF[+m[1]].name===r.name){r.prep=t[0];r.cook=t[1];r.steps=t[2];ch=true}});lib.forEach(r=>{const m=/^d(\d+)$/.exec(r.id),i=m&&+m[1];if(m&&DEF[i]&&!r.m3&&DEF[i].name===r.name&&r.steps&&r.steps[0]===OLD1[i]){r.ing=JSON.parse(JSON.stringify(DEF[i].ing));r.steps=STEPS[i][2].slice();r.prep=STEPS[i][0];r.cook=STEPS[i][1];r.m3=1;ch=true}});
   lib.forEach(r=>{const m=/^d(\d+)$/.exec(r.id);if(m&&!r.m2&&DEF[+m[1]]&&DEF[+m[1]].name===r.name){Object.assign(r,EXTRA[+m[1]]||{});r.m2=1;ch=true}});return ch}
 
 const store={get(k,d){try{const v=localStorage.getItem('menus2.'+k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem('menus2.'+k,JSON.stringify(v))}catch(e){}}};
@@ -614,7 +628,10 @@ function renderSide(){
   $('count').innerHTML='<b>'+lib.length+'</b><span>recette'+(lib.length>1?'s':'')+'</span><span class="tag t-viande">'+ct('viande')+' viande</span><span class="tag t-poisson">'+ct('poisson')+' poisson</span><span class="tag t-végé">'+ct('végé')+' végé</span>'+(fv?'<span class="src">❤️ '+fv+'</span>':'')+(av?'<span class="src" style="color:var(--soft)">👎 '+av+'</span>':'');
   const nb=a=>lib.filter(r=>a==='ex'?!r.author:r.author===a).length;
   $('libf').innerHTML=[['all','Toutes ('+lib.length+')']].concat(HOUSE.members.map(m=>[m,m+' ('+nb(m)+')']),[['ex','Exemples ('+nb('ex')+')']]).map(([k,l])=>'<button data-f="'+esc(k)+'" aria-pressed="'+(LIBF===k)+'">'+esc(l)+'</button>').join('');
-  const shown=lib.filter(r=>LIBF==='all'||(LIBF==='ex'?!r.author:r.author===LIBF));
+  const tg=allTags();if(LIBT!=='all'&&LIBT!=='none'&&!tg.includes(LIBT))LIBT='all';
+  const nt=lib.filter(r=>!(r.tags||[]).length).length;
+  $('libt').innerHTML=[['all','Toutes catégories']].concat(tg.map(t=>[t,t+' ('+lib.filter(r=>(r.tags||[]).includes(t)).length+')']),nt?[['none','Sans catégorie ('+nt+')']]:[]).map(([k,l])=>'<button data-t="'+esc(k)+'" aria-pressed="'+(LIBT===k)+'">'+esc(l)+'</button>').join('');
+  const shown=lib.filter(r=>(LIBF==='all'||(LIBF==='ex'?!r.author:r.author===LIBF))&&(LIBT==='all'||(LIBT==='none'?!(r.tags||[]).length:(r.tags||[]).includes(LIBT))));
   $('lib').innerHTML=(shown.length?'':'<span class="hint">Aucune recette pour l\'instant.</span>')+shown.map(r=>'<span class="chip">'+badge(r.author)+'<span class="t-'+esc(r.type)+'">●</span><button class="nm" data-open="'+esc(r.id)+'">'+(r.fav===1?'❤️ ':r.fav===-1?'👎 ':'')+esc(r.name)+'</button><button class="ic" data-del="'+esc(r.id)+'" aria-label="Supprimer '+esc(r.name)+'">'+ICON.x+'</button></span>').join('');
 }
 function render(){renderMe();renderHead();renderWeek();renderShop();renderBud();renderNut();renderCal();renderSide()}
@@ -642,7 +659,7 @@ function importRows(rows){
   const find=(re,d)=>{const i=h.findIndex(c=>re.test(c));return i>=0?i:d};
   const hasHead=h.some(c=>/plat|menu|recette|ingredient/.test(c));
   const C={plat:find(/plat|menu|recette/,0),type:find(/type|cat/,1),q:find(/quant|qte|qt/,2),u:find(/unit/,3),n:find(/ingred|produit|aliment/,4),r:find(/rayon/,5),
-    k:find(/kcal|calor|energ/,6),p:find(/prot/,7),g:find(/gluc|carb/,8),l:find(/lipid|gras/,9),w:find(/piece|poids/,10),prep:find(/prep|temps/,-1),cook:find(/cuisson/,-1),url:find(/lien|url|source/,-1),st:find(/etape|instruction/,-1),sea:find(/saison/,-1),au:find(/auteur|propose|qui/,-1),fav:find(/favori|avis|note/,-1),big:find(/restes?$|grande/,-1)};
+    k:find(/kcal|calor|energ/,6),p:find(/prot/,7),g:find(/gluc|carb/,8),l:find(/lipid|gras/,9),w:find(/piece|poids/,10),prep:find(/prep|temps/,-1),cook:find(/cuisson/,-1),url:find(/lien|url|source/,-1),st:find(/etape|instruction/,-1),sea:find(/saison/,-1),au:find(/auteur|propose|qui/,-1),tg:find(/tag|categ/,-1),fav:find(/favori|avis|note/,-1),big:find(/restes?$|grande/,-1)};
   const out=[];let curR=null;
   (hasHead?rows.slice(1):rows).forEach(r=>{
     const name=String(r[C.plat]??'').trim();
@@ -650,6 +667,7 @@ function importRows(rows){
       const cell=i=>i>=0?String(r[i]??'').trim():'';
       if(fnum(cell(C.prep))!=null)curR.prep=fnum(cell(C.prep));if(fnum(cell(C.cook))!=null)curR.cook=fnum(cell(C.cook));
       if(/^https?:\/\//i.test(cell(C.url)))curR.url=cell(C.url);
+      const tgs=cell(C.tg).split(/[,;\n]/).map(x=>x.trim()).filter(Boolean).map(x=>{const k=TAGS.find(t=>lc(t)===lc(x));return k||x.charAt(0).toUpperCase()+x.slice(1)});if(tgs.length)curR.tags=tgs;curR.tg=1;
       const au=cell(C.au);if(au){const m=HOUSE.members.find(x=>lc(x)===lc(au));curR.author=m||au}
       const se=lc(cell(C.sea)).normalize('NFD').replace(/[\u0300-\u036f]/g,'');if(/ete|summer/.test(se))curR.season='ete';else if(/hiver|winter/.test(se))curR.season='hiver';
       const fv=lc(cell(C.fav));if(/oui|favori|❤|coeur|cœur|1/.test(fv))curR.fav=1;else if(/eviter|éviter|non|👎|-1/.test(fv))curR.fav=-1;
@@ -674,7 +692,8 @@ function handleFile(file){
     const mode=document.querySelector('input[name=mode]:checked').value;
     const own=$('iown').value;recs.forEach(r=>{if(!r.author&&own)r.author=own});
     const mk=(r,i)=>Object.assign({id:'f'+Date.now()+'_'+i},r);
-    if(mode==='replace'){lib=recs.map(mk)}else{recs.forEach((r,i)=>{const ex=lib.find(x=>x.name.toLowerCase()===r.name.toLowerCase()&&(!x.author||x.author===r.author));if(ex){ex.type=r.type;ex.ing=r.ing;['prep','cook','url','steps','season','fav','big','author'].forEach(k=>{if(r[k]!=null)ex[k]=r[k]})}else lib.push(mk(r,i))})}
+    recs.forEach(r=>{if(!r.tags){const t=autoTags(r);if(t.length)r.tags=t}});
+  if(mode==='replace'){lib=recs.map(mk)}else{recs.forEach((r,i)=>{const ex=lib.find(x=>x.name.toLowerCase()===r.name.toLowerCase()&&(!x.author||x.author===r.author));if(ex){ex.type=r.type;ex.ing=r.ing;['prep','cook','url','steps','season','fav','big','author','tags'].forEach(k=>{if(r[k]!=null)ex[k]=r[k]})}else lib.push(mk(r,i))})}
     Object.values(weeks).forEach(w=>Object.keys(w.plan).forEach(k=>{if(!byId(w.plan[k].id))delete w.plan[k]}));
     save();render();msg.textContent=recs.length+' plat'+(recs.length>1?'s':'')+' importé'+(recs.length>1?'s':'')+' depuis « '+file.name+' ».';
   }catch(err){msg.textContent='Import impossible : '+err.message;msg.style.color='var(--tomato-ink)'}};
@@ -702,7 +721,7 @@ function openEd(key){edKey=key;edBack=document.activeElement;const [d,w]=key.spl
   $('edt').textContent=DAYS[d]+' '+addDays(cur,+d).getDate()+' · '+(w==='midi'?'midi':'soir');$('eds').value='';$('edf').value='';listEd();$('ov').hidden=false;$('eds').focus()}
 function closeEd(){$('ov').hidden=true;const w=W();if(edKey&&w.on[edKey]&&!valid(w.plan[edKey])){const s=slots().find(x=>x.key===edKey);if(s&&!s.base)delete w.on[edKey]}edKey=null;save();render();if(edBack&&edBack.focus)try{edBack.focus()}catch(e){}}
 function listEd(){const q=$('eds').value.trim().toLowerCase();
-  $('edl').innerHTML=lib.filter(r=>!q||r.name.toLowerCase().includes(q)).sort((a,b)=>a.name.localeCompare(b.name,'fr')).map(r=>'<button data-pick="'+esc(r.id)+'"><span>'+esc(r.name)+'</span><span class="tag t-'+esc(r.type)+'">'+esc(r.type)+'</span></button>').join('')||'<p class="hint">Aucun plat trouvé.</p>'}
+  $('edl').innerHTML=lib.filter(r=>!q||r.name.toLowerCase().includes(q)||(r.tags||[]).some(t=>t.toLowerCase().includes(q))).sort((a,b)=>a.name.localeCompare(b.name,'fr')).map(r=>'<button data-pick="'+esc(r.id)+'"><span>'+esc(r.name)+'</span><span class="tag t-'+esc(r.type)+'">'+esc(r.type)+'</span></button>').join('')||'<p class="hint">Aucun plat trouvé.</p>'}
 function setSlot(v){const w=W(),k=edKey;if(v===null){w.on[k]=false;delete w.plan[k]}else{w.on[k]=true;w.plan[k]=v}w.checked=[];save();edKey=null;closeEd()}
 $('eds').addEventListener('input',listEd);
 $('edl').addEventListener('click',e=>{const b=e.target.closest('[data-pick]');if(b)setSlot({id:b.dataset.pick,locked:true})});
@@ -722,7 +741,7 @@ function renderRv(edit){
   const head='<div class="row"><h2 id="rvt">'+esc(r.name)+'</h2><button class="ic" data-rv="close" aria-label="Fermer">'+ICON.x+'</button></div>';
   if(!edit){
     const f=factor(),url=/^https?:\/\//i.test(r.url||'')?r.url:'';
-    b.innerHTML=head+'<div class="meta">'+(r.author?'<span style="display:inline-flex;align-items:center;gap:6px;font-weight:700;color:var(--ink)">'+badge(r.author)+'Recette '+esc(deN(r.author))+'</span>':'<span>Recette d\'exemple</span>')+'<span class="tag t-'+esc(r.type)+'">'+esc(r.type)+'</span>'+(r.prep?'<span>Préparation '+num(+r.prep)+' min</span>':'')+(r.cook?'<span>Cuisson '+num(+r.cook)+' min</span>':'')+(r.season&&r.season!=='toute'?'<span class="hol">'+(r.season==='ete'?'Été':'Hiver')+'</span>':'')+(r.big?'<span class="hol">Grande quantité · restes</span>':'')+(url?'<a href="'+esc(url)+'" target="_blank" rel="noopener">Recette d\'origine ↗</a>':'')+'</div>'+
+    b.innerHTML=head+'<div class="meta">'+(r.author?'<span style="display:inline-flex;align-items:center;gap:6px;font-weight:700;color:var(--ink)">'+badge(r.author)+'Recette '+esc(deN(r.author))+'</span>':'<span>Recette d\'exemple</span>')+'<span class="tag t-'+esc(r.type)+'">'+esc(r.type)+'</span>'+(r.prep?'<span>Préparation '+num(+r.prep)+' min</span>':'')+(r.cook?'<span>Cuisson '+num(+r.cook)+' min</span>':'')+(r.season&&r.season!=='toute'?'<span class="hol">'+(r.season==='ete'?'Été':'Hiver')+'</span>':'')+(r.tags||[]).map(t=>'<span class="ctag">'+esc(t)+'</span>').join('')+(r.big?'<span class="hol">Grande quantité · restes</span>':'')+(url?'<a href="'+esc(url)+'" target="_blank" rel="noopener">Recette d\'origine ↗</a>':'')+'</div>'+
       '<h3>Ingrédients <span class="hint">pour le foyer ('+num(f,1)+' portions adulte)</span></h3><ul class="ingl">'+r.ing.map(i=>'<li><span>'+esc(i[2])+'</span><b>'+fmt(i[0]*f,i[1])+'</b></li>').join('')+'</ul>'+
       '<h3>Préparation</h3>'+(r.steps&&r.steps.length?'<ol class="steps">'+r.steps.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ol>':'<p class="hint">Pas encore d\'étapes : clique sur « Modifier » pour les ajouter.</p>')+
       '<div class="actions" style="margin-top:8px"><button class="btn'+(r.fav===1?' main':'')+'" data-rv="fav" aria-pressed="'+(r.fav===1)+'">❤️ Favori</button><button class="btn'+(r.fav===-1?' main':'')+'" data-rv="avoid" aria-pressed="'+(r.fav===-1)+'">👎 À éviter</button></div>'+
@@ -735,6 +754,7 @@ function renderRv(edit){
       '<label class="f">Préparation (min)<input type="number" min="0" name="prep" value="'+esc(r.prep??'')+'"></label><label class="f">Cuisson (min)<input type="number" min="0" name="cook" value="'+esc(r.cook??'')+'"></label></div>'+
       '<div class="g3"><label class="f">Saison<select name="season">'+[['toute','Toute l\'année'],['ete','Été'],['hiver','Hiver']].map(([v,l])=>'<option value="'+v+'"'+((r.season||'toute')===v?' selected':'')+'>'+l+'</option>').join('')+'</select></label>'+
       '<label class="f" style="grid-column:span 2;display:flex;align-items:center;gap:10px;font-weight:600"><input type="checkbox" name="big"'+(r.big?' checked':'')+' style="width:22px;height:22px;accent-color:var(--tomato)">Grande quantité : prévoir les restes le lendemain midi</label></div>'+
+      '<div class="f" style="display:grid;gap:6px;font-weight:700;font-size:14px">Catégories<div class="tsel">'+[...new Set(TAGS.concat(allTags(),r.tags||[]))].map(t=>'<label><input type="checkbox" name="tag" value="'+esc(t)+'"'+((r.tags||[]).includes(t)?' checked':'')+'>'+esc(t)+'</label>').join('')+'</div><input type="text" name="newtags" placeholder="Autre catégorie (séparer par des virgules)" style="min-height:44px;padding:8px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);font-size:16px;font-weight:400"></div>'+
       '<label class="f">Recette de<select name="author"><option value="">— (exemple)</option>'+HOUSE.members.concat(r.author&&!HOUSE.members.includes(r.author)?[r.author]:[]).map(m=>'<option'+(m===r.author?' selected':'')+'>'+esc(m)+'</option>').join('')+'</select></label>'+
       '<label class="f">Lien vers la recette<input type="url" name="url" placeholder="https://…" value="'+esc(r.url||'')+'"></label>'+
       '<label class="f">Ingrédients pour 1 adulte, un par ligne<textarea name="ing">'+esc(r.ing.map(ingLine).join('\n'))+'</textarea></label>'+
@@ -752,6 +772,7 @@ $('rvb').addEventListener('submit',e=>{e.preventDefault();const r=byId(rvId),fd=
   const pn=fnum(fd.get('prep')),cn=fnum(fd.get('cook'));if(pn!=null)r.prep=pn;else delete r.prep;if(cn!=null)r.cook=cn;else delete r.cook;
   const u=String(fd.get('url')).trim();if(/^https?:\/\//i.test(u))r.url=u;else delete r.url;
   r.ing=parseLines(String(fd.get('ing'))).map(i=>{const o=old[lc(i[2])];if(o){i[3]=o[3];if(o[4])i[4]=o[4]}return i});
+  const tg=fd.getAll('tag').concat(String(fd.get('newtags')||'').split(/[,;]/).map(x=>x.trim()).filter(Boolean).map(x=>x.charAt(0).toUpperCase()+x.slice(1)));r.tags=[...new Set(tg)];r.tg=1;
   r.season=fd.get('season')==='toute'?undefined:fd.get('season');if(!r.season)delete r.season;r.big=!!fd.get('big');
   r.steps=String(fd.get('steps')).split('\n').map(x=>x.trim()).filter(Boolean);
   save();render();renderRv(false);toast('Recette enregistrée')});
@@ -813,21 +834,22 @@ $('maxT').addEventListener('change',e=>{S.maxT=parseInt(e.target.value)||0;save(
 $('season').addEventListener('change',e=>{S.season=e.target.checked;save()});
 $('rest').addEventListener('change',e=>{S.rest=e.target.checked;save()});
 $('me').addEventListener('click',e=>{const b=e.target.closest('[data-me]');if(!b)return;ME=ME===b.dataset.me?null:b.dataset.me;store.set('me',ME);renderMe();toast(ME?'Cet appareil est celui '+deN(ME):'Personne n\'est choisi sur cet appareil')});
+$('libt').addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(!b)return;LIBT=b.dataset.t;renderSide()});
 $('libf').addEventListener('click',e=>{const b=e.target.closest('[data-f]');if(!b)return;LIBF=b.dataset.f;renderSide()});
 $('lib').addEventListener('click',e=>{const o=e.target.closest('[data-open]');if(o)return openRv(o.dataset.open);const b=e.target.closest('[data-del]');if(!b)return;if(lib.length<=1)return toast('Garde au moins un menu');
   const id=b.dataset.del;lib=lib.filter(r=>r.id!==id);Object.values(weeks).forEach(w=>Object.keys(w.plan).forEach(k=>{if(w.plan[k].id===id)delete w.plan[k]}));save();render()});
 $('add').addEventListener('submit',e=>{e.preventDefault();const n=$('nname').value.trim();if(!n)return;
-  lib.push(Object.assign({id:'u'+Date.now(),name:n,type:$('ntype').value,ing:parseLines($('ning').value)},ME?{author:ME}:{}));$('nname').value='';$('ning').value='';save();render();toast('« '+n+' » ajouté')});
+  lib.push(Object.assign({id:'u'+Date.now(),name:n,type:$('ntype').value,ing:parseLines($('ning').value)},ME?{author:ME}:{}));migrate();$('nname').value='';$('ning').value='';save();render();toast('« '+n+' » ajouté')});
 $('file').addEventListener('change',e=>{if(e.target.files[0])handleFile(e.target.files[0]);e.target.value=''});
 const dz=$('drop');['dragover','dragenter'].forEach(t=>dz.addEventListener(t,e=>{e.preventDefault();dz.classList.add('over')}));
 ['dragleave','drop'].forEach(t=>dz.addEventListener(t,()=>dz.classList.remove('over')));
 dz.addEventListener('drop',e=>{e.preventDefault();const f=e.dataTransfer.files[0];if(f)handleFile(f)});
 $('exp').addEventListener('click',()=>{const msg=$('impmsg');msg.style.color='';
   if(typeof XLSX==='undefined'){msg.textContent='Le lecteur de fichiers n\'a pas pu se charger. Vérifie ta connexion et recharge la page.';msg.style.color='var(--tomato-ink)';return}
-  const H=['Plat','Type','Quantité','Unité','Ingrédient','Rayon','kcal','Protéines','Glucides','Lipides','g/pièce','Préparation (min)','Cuisson (min)','Lien','Étapes','Saison','Favori','Restes','Auteur'],rows=[H];
+  const H=['Plat','Type','Quantité','Unité','Ingrédient','Rayon','kcal','Protéines','Glucides','Lipides','g/pièce','Préparation (min)','Cuisson (min)','Lien','Étapes','Saison','Favori','Restes','Auteur','Catégories'],rows=[H];
   lib.forEach(r=>r.ing.forEach((i,j)=>{const n=i[4]||NUT[lc(i[2])]||[];
-    rows.push([j?'':r.name,j?'':r.type,i[0],i[1],i[2],R[R[i[3]]?i[3]:'di'],n[0]??'',n[1]??'',n[2]??'',n[3]??'',n[4]??''].concat(j?['','','','','','','','']:[r.prep??'',r.cook??'',r.url||'',(r.steps||[]).join('\n'),r.season==='ete'?'été':r.season==='hiver'?'hiver':'',r.fav===1?'oui':r.fav===-1?'éviter':'',r.big?'oui':'',r.author||'']))}));
-  try{const wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=H.map((h,i)=>({wch:[30,9,9,8,24,20,7,9,9,8,8,11,10,20,60,8,8,8,10][i]}));XLSX.utils.book_append_sheet(wb,ws,'Menus');
+    rows.push([j?'':r.name,j?'':r.type,i[0],i[1],i[2],R[R[i[3]]?i[3]:'di'],n[0]??'',n[1]??'',n[2]??'',n[3]??'',n[4]??''].concat(j?['','','','','','','','','']:[r.prep??'',r.cook??'',r.url||'',(r.steps||[]).join('\n'),r.season==='ete'?'été':r.season==='hiver'?'hiver':'',r.fav===1?'oui':r.fav===-1?'éviter':'',r.big?'oui':'',r.author||'',(r.tags||[]).join(', ')]))}));
+  try{const wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=H.map((h,i)=>({wch:[30,9,9,8,24,20,7,9,9,8,8,11,10,20,60,8,8,8,10,24][i]}));XLSX.utils.book_append_sheet(wb,ws,'Menus');
     XLSX.writeFile(wb,'bibliotheque-menus-'+ymd(new Date())+'.ods',{bookType:'ods'});msg.textContent=lib.length+' recettes exportées. Le fichier se réimporte tel quel.'}
   catch(err){msg.textContent='Export impossible ici ('+err.message+'). Ouvre l\'appli depuis plutus2811.github.io/menus.';msg.style.color='var(--tomato-ink)'}});
 $('tpl').addEventListener('click',async()=>{const t=['Plat\tType\tQuantité\tUnité\tIngrédient\tRayon\tkcal\tProtéines\tGlucides\tLipides\tg/pièce','Lasagnes\tviande\t100\tg\tbœuf haché\tBoucherie','\t\t3\tpièce\tfeuilles de lasagne\tÉpicerie\t350\t12\t70\t1.5\t20'].join('\n');
