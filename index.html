@@ -11,6 +11,18 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
+#mv .mvd{width:min(1280px,100%);max-height:94vh;overflow:auto;padding:16px}.mvh{flex-wrap:wrap;gap:10px;align-items:center;position:sticky;top:-16px;background:var(--card);z-index:2;padding:4px 0 8px}.mvh h2{font-size:22px;min-width:170px;text-align:center}.mvc{display:flex;flex-wrap:wrap;gap:8px;margin-left:auto}.mvc .seg button{min-height:36px;padding:0 12px;font-size:14px}
+.mvg{display:grid;grid-template-columns:150px repeat(7,minmax(0,1fr));gap:6px;align-items:stretch}.mvg.cal{grid-template-columns:repeat(7,minmax(0,1fr))}
+.mvdh{font-weight:800;font-size:13px;color:var(--soft);text-align:center;padding:2px 0}
+.mvl{border-radius:12px;padding:8px 10px;background:var(--wash);border-left:5px solid var(--mc);display:flex;flex-direction:column;gap:2px;font-size:13px}.mvl b{font-size:16px;color:var(--mc)}.mvl .hint{margin:0;font-size:12px}
+.mvday{border:1.5px solid var(--line);border-radius:12px;padding:6px 7px;min-height:118px;display:flex;flex-direction:column;gap:4px;cursor:pointer;background:var(--card);text-align:left;font:inherit;color:inherit;border-top:4px solid var(--mc)}.mvday:hover{border-color:var(--soft);border-top-color:var(--mc)}
+.mvday.out{opacity:.45}.mvday.vac{background:light-dark(#eef5fc,#1f2a35)}.mvday.tod{box-shadow:0 0 0 2px var(--tomato)}
+.mvdn{display:flex;justify-content:space-between;align-items:baseline;gap:4px;font-weight:800;font-size:15px}.mvdn small{font-weight:700;font-size:11px;color:var(--soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mvm{font-size:12.5px;line-height:1.25;padding:3px 5px;border-radius:6px;background:var(--wash)}.mvm i{font-style:normal;font-weight:800;font-size:10.5px;color:var(--soft);text-transform:uppercase;letter-spacing:.03em;display:block}.mvm.off{background:transparent;color:var(--soft);padding:1px 5px}.mvm.empty{background:transparent;color:var(--soft)}
+.mvm.t-v{border-left:3px solid var(--basil)}.mvm.t-p{border-left:3px solid var(--fish)}.mvm.t-m{border-left:3px solid var(--tomato-ink)}
+.mvleg{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:13px;color:var(--soft);margin-top:10px}
+@media(max-width:760px){.mvg,.mvg.cal{display:block}.mvdh{display:none}.mvl{margin:14px 0 6px}.mvday{min-height:0;margin:0 0 6px;display:grid;grid-template-columns:86px 1fr 1fr;gap:6px;align-items:start}.mvday .mvdn{flex-direction:column}.mvg.cal .mvday.out{display:none}.mvc{margin-left:0;order:2;width:100%}.mvday{width:100%}.mvh{display:flex}#mvx{margin-left:auto}}
+@media print{body>*:not(#mv){display:none!important}#mv{position:static;background:none;padding:0}.mvd{max-height:none;box-shadow:none;width:100%}.mvh .ic,.mvc{display:none}}
 .sugg{display:grid;gap:4px;margin:6px 0 10px;max-height:320px;overflow:auto;padding:6px;border:1.5px solid var(--line);border-radius:12px;background:var(--card)}.sugg button{display:grid;grid-template-columns:1fr auto;gap:2px 10px;text-align:left;padding:8px 10px;border:0;border-radius:8px;background:transparent;cursor:pointer;font:inherit;color:inherit}.sugg button:hover,.sugg button:focus{background:var(--wash)}.sugg .sl{grid-column:1;font-size:13px;color:var(--soft)}.sugg .sp{grid-row:1/3;grid-column:2;align-self:center;font-weight:700;white-space:nowrap;text-align:right}.sugg .sp small{display:block;font-weight:600;color:var(--soft);font-size:11px}
 .warn{margin:0 0 12px;padding:10px 12px;border-radius:12px;background:light-dark(#fff4e5,#3a2a17);border:1.5px solid light-dark(#f0c27a,#7a5a2a);font-size:14px;line-height:1.6}.warn .chip{border:0;font:inherit;font-size:14px;cursor:pointer;padding:2px 10px;margin:2px 0}
 .pk{display:block;font-size:11px;font-weight:600;color:var(--soft);line-height:1.1}
@@ -218,6 +230,7 @@ textarea{min-height:100px;resize:vertical}
       </div>
       <button class="btn" id="theme" style="display:inline-flex;align-items:center;gap:8px"></button>
       <button class="btn" id="today">Cette semaine</button>
+      <button class="btn" id="mview" style="display:inline-flex;align-items:center;gap:8px" title="Vue du mois"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M8 14h2M14 14h2M8 17.5h2" stroke-width="2.4"/></svg>Mois</button>
       <button class="btn main" id="draw">Tirer la semaine</button>
     </div>
   </div>
@@ -337,6 +350,11 @@ textarea{min-height:100px;resize:vertical}
   </section>
 </div>
 <div class="toast" id="toast"></div>
+<div class="ov" id="mv" hidden><div class="dlg mvd" role="dialog" aria-modal="true" aria-labelledby="mvt">
+  <div class="row mvh"><div style="display:flex;align-items:center;gap:6px"><button class="ic" id="mvp" aria-label="Mois précédent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 5l-7 7 7 7"/></svg></button><h2 id="mvt"></h2><button class="ic" id="mvn" aria-label="Mois suivant"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 5l7 7-7 7"/></svg></button></div>
+  <div class="mvc"><div class="seg" id="mvmode" role="group" aria-label="Affichage"><button type="button" data-mm="tours">Tours de cuisine</button><button type="button" data-mm="cal">Calendrier</button></div><div class="seg" id="mvwho" role="group" aria-label="Qui cuisine"></div></div>
+  <button class="ic" id="mvx" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+  <div id="mvb"></div></div></div>
 <div class="ov" id="ryv" hidden><div class="dlg" role="dialog" aria-modal="true" aria-labelledby="ryt" style="width:min(380px,100%)"><div class="row"><h2 id="ryt" style="font-size:22px"></h2><button class="ic" id="ryx" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><p class="hint" style="margin:0">L'appli retiendra ce rayon pour cet article.</p><div class="rys" id="rys"></div></div></div>
 <div class="ov" id="prv" hidden><form class="dlg" id="prf" role="dialog" aria-modal="true" aria-labelledby="prt" style="width:min(400px,100%)"></form></div>
 <div class="ov" id="rv" hidden><div class="dlg rvd" role="dialog" aria-modal="true" aria-labelledby="rvt" id="rvb"></div></div>
@@ -817,6 +835,40 @@ $('draw').addEventListener('click',()=>{fill(null);toast('Semaine '+iso(cur).w+'
 $('prev').addEventListener('click',()=>goto(addDays(cur,-7)));
 $('next').addEventListener('click',()=>goto(addDays(cur,7)));
 $('today').addEventListener('click',()=>goto(TODAY));
+/* ---------- vue du mois ---------- */
+let MV={m:null,mode:'tours',who:'all'};
+function dayMeals(d){const mon=monday(d),i=(d.getDay()+6)%7,wk=weeks[wkey(mon)]||{},ov=wk.on||{},info=dayInfo(d),plan=wk.plan||{};
+  return ['midi','soir'].map(w=>{const key=i+'-'+w,base=w==='soir'||i>=5||S.wklunch||(S.wed&&i===2)||!!info,on=key in ov?ov[key]:base,p=plan[key];
+    if(!on)return {w,off:true,base};if(!p)return {w,empty:true};if(p.txt)return {w,txt:p.txt,locked:p.locked};const r=byId(p.id);return r?{w,name:(p.rest?'Restes : ':'')+r.name,type:r.type,locked:p.locked,rest:p.rest}:{w,empty:true}})}
+function mvCell(d,inMonth){const c=cookOf(d),info=dayInfo(d),ms=dayMeals(d),tk=d.toDateString()===TODAY.toDateString();
+  const cls={viande:'t-m',poisson:'t-p','végé':'t-v'};
+  return '<button type="button" class="mvday'+(inMonth?'':' out')+(info?' vac':'')+(tk?' tod':'')+'" data-mvd="'+ymd(d)+'" style="--mc:'+(c?mcol(c):'var(--line)')+'" title="Ouvrir la semaine">'+
+    '<span class="mvdn"><span>'+DAYS[(d.getDay()+6)%7].slice(0,3)+'. '+d.getDate()+(d.getDate()===1||!inMonth?' '+MABR[d.getMonth()]:'')+'</span>'+(info?'<small>'+esc(info.label.replace('Vacances · ','Vac. '))+'</small>':'')+'</span>'+
+    ms.map(m=>m.off?(m.base?'':'<span class="mvm off">'+(m.w==='midi'?'Cantine':'—')+'</span>'):m.empty?'<span class="mvm empty"><i>'+m.w+'</i>—</span>':'<span class="mvm '+(cls[m.type]||'')+'"><i>'+m.w+(m.locked?' 🔒':'')+'</i>'+esc(m.txt||m.name)+'</span>').join('')+'</button>'}
+function renderMV(){const m=MV.m,y=m.getFullYear(),mo=m.getMonth(),first=new Date(y,mo,1),last=new Date(y,mo+1,0);
+  $('mvt').textContent=first.toLocaleDateString('fr-FR',{month:'long',year:'numeric'}).replace(/^./,c=>c.toUpperCase());
+  $('mvmode').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mm===MV.mode)));
+  $('mvwho').hidden=MV.mode!=='tours';$('mvwho').innerHTML=[['all','Tous']].concat(HOUSE.members.map(x=>[x,x])).map(([k,l])=>'<button type="button" data-mw="'+esc(k)+'" aria-pressed="'+(MV.who===k)+'">'+esc(l)+'</button>').join('');
+  let h='';
+  if(MV.mode==='tours'){let d=addDays(first,-((first.getDay()+5)%7));h='<div class="mvg"><span></span>'+['Mar','Mer','Jeu','Ven','Sam','Dim','Lun'].map(x=>'<span class="mvdh">'+x+'</span>').join('');let n=0;
+    while(d<=last){const c=cookOf(d),end=addDays(d,6);if(MV.who==='all'||MV.who===c){let cnt={tot:0,'végé':0,poisson:0};for(let k=0;k<7;k++)dayMeals(addDays(d,k)).forEach(x=>{if(x.name&&!x.rest){cnt.tot++;if(cnt[x.type]!=null)cnt[x.type]++}else if(x.txt)cnt.tot++});
+      h+='<div class="mvl" style="--mc:'+(c?mcol(c):'var(--line)')+'"><b>'+esc(c||'—')+'</b><span>'+d.getDate()+' '+MABR[d.getMonth()]+' → '+end.getDate()+' '+MABR[end.getMonth()]+'</span><span class="hint">'+cnt.tot+' repas · '+cnt['végé']+' végé · '+cnt.poisson+' poisson</span></div>';
+      for(let k=0;k<7;k++){const x=addDays(d,k);h+=mvCell(x,x.getMonth()===mo)}n++}d=addDays(d,7)}
+    h+='</div>'+(n?'':'<p class="hint">Aucune semaine de cuisine pour '+esc(MV.who)+' ce mois-ci.</p>')}
+  else{let d=monday(first);h='<div class="mvg cal">'+DAYS.map(x=>'<span class="mvdh">'+x.slice(0,3)+'</span>').join('');while(d<=last){for(let k=0;k<7;k++){const x=addDays(d,k);h+=mvCell(x,x.getMonth()===mo)}d=addDays(d,7)}h+='</div>'}
+  h+='<div class="mvleg">'+HOUSE.members.map(x=>'<span style="display:inline-flex;align-items:center;gap:6px"><span style="width:14px;height:14px;border-radius:4px;background:'+mcol(x)+'"></span>'+esc(x)+' cuisine</span>').join('')+'<span>🔒 plat validé</span><span>— à tirer</span><span>Fond bleu : vacances ou jour férié</span><span style="margin-left:auto"><button class="btn" type="button" id="mvprint">Imprimer</button></span></div>';
+  $('mvb').innerHTML=h}
+function openMV(){MV.m=new Date(cur.getFullYear(),cur.getMonth(),1);if(addDays(cur,3).getMonth()!==cur.getMonth())MV.m=new Date(addDays(cur,3).getFullYear(),addDays(cur,3).getMonth(),1);renderMV();$('mv').hidden=false;$('mvx').focus()}
+$('mview').addEventListener('click',openMV);
+$('mvx').addEventListener('click',()=>{$('mv').hidden=true});
+$('mv').addEventListener('click',e=>{if(e.target===$('mv'))$('mv').hidden=true});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('mv').hidden)$('mv').hidden=true});
+$('mvp').addEventListener('click',()=>{MV.m=new Date(MV.m.getFullYear(),MV.m.getMonth()-1,1);renderMV()});
+$('mvn').addEventListener('click',()=>{MV.m=new Date(MV.m.getFullYear(),MV.m.getMonth()+1,1);renderMV()});
+$('mvmode').addEventListener('click',e=>{const b=e.target.closest('[data-mm]');if(b){MV.mode=b.dataset.mm;renderMV()}});
+$('mvwho').addEventListener('click',e=>{const b=e.target.closest('[data-mw]');if(b){MV.who=b.dataset.mw;renderMV()}});
+$('mvb').addEventListener('click',e=>{if(e.target.closest('#mvprint'))return window.print();const b=e.target.closest('[data-mvd]');if(!b)return;$('mv').hidden=true;goto(new Date(b.dataset.mvd+'T12:00:00'));window.scrollTo({top:0,behavior:'smooth'})});
+
 $('mprev').addEventListener('click',()=>{calMonth=new Date(calMonth.getFullYear(),calMonth.getMonth()-1,1);renderCal()});
 $('mnext').addEventListener('click',()=>{calMonth=new Date(calMonth.getFullYear(),calMonth.getMonth()+1,1);renderCal()});
 const pickW=e=>{const tr=e.target.closest('tr[data-w]');if(tr){cur=monday(new Date(tr.dataset.w));render()}};

@@ -72,3 +72,4 @@ Les valeurs nutritionnelles fournies sont des ordres de grandeur, pas des donné
 - Gomme sur chaque repas (midi ou soir) pour l'effacer individuellement ; le créneau repasse à « À tirer ». Un repas verrouillé est protégé : il faut le déverrouiller pour l'effacer.
 - Recettes d'Alex (78 plats issus de son fichier Menus.ods) : fichier alex-recettes.json, ajoutées automatiquement une seule fois à la bibliothèque du foyer, attribuées à Alex ; les exemples équivalents sont remplacés.
 - Recettes de qui cuisine : le crayon affiche d'abord les recettes de la personne de service (boutons David / Alex / Toutes) ; réglage « Privilégier les recettes de qui cuisine » (non / un peu ×2 / fortement ×5) pour le tirage, qui reste aléatoire parmi toutes les recettes.
+- Vue du mois (bouton « Mois ») : tours de cuisine du mardi au lundi, filtrables par personne, ou calendrier classique ; clic sur un jour pour ouvrir sa semaine ; impression.
