@@ -48,7 +48,7 @@ button,select,input,textarea{font:inherit;color:inherit}
 .slot .when{font-size:13px;color:var(--soft);font-weight:700}
 .slot .name{font-weight:700;line-height:1.25;flex:1}
 .slot .kc{font-size:13px;color:var(--soft)}
-.slot>.row:last-child{flex-wrap:wrap;row-gap:2px}.slot>.row:last-child>span:last-child{display:flex;margin-left:auto}.slot .ic{width:32px;height:34px}.slot .ic:disabled{opacity:.3;cursor:not-allowed}
+.slot>.row:last-child{flex-wrap:wrap;row-gap:2px}.slot>.row:last-child>span:last-child{display:flex;margin-left:auto}.slot .ic{width:32px;height:34px}.slot .ic.dis{cursor:not-allowed;position:relative}.slot .ic.dis svg{opacity:.3}.ic[data-tip]::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);right:-30px;background:var(--ink);color:var(--bg);font:700 12px/1.3 Nunito,sans-serif;padding:5px 9px;border-radius:8px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .08s;z-index:5}.ic[data-tip]:hover::after,.ic[data-tip].tip::after{opacity:1}
 #theme svg{width:20px;height:20px}
 .slot.new .name{animation:pop .35s ease}
 @keyframes pop{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
@@ -556,7 +556,7 @@ function renderWeek(){
     if(p&&p.txt)return '<div class="slot"><span class="when">'+lab+'</span><span class="name">'+esc(p.txt)+'</span><span class="kc">repas libre</span><div class="row"><span class="tag t-libre">libre</span><span>'+ed+'<button class="ic" data-erase="'+s.key+'" aria-label="Effacer ce repas" title="Effacer ce repas">'+ICON.erase+'</button>'+'<button class="ic" data-roll="'+s.key+'" aria-label="Tirer un plat à la place">'+ICON.roll+'</button></span></div></div>';
     if(!r)return '<div class="slot"><span class="when">'+lab+'</span><span class="name" style="color:var(--soft)">À tirer</span><div class="row"><span></span><span>'+ed+'<button class="ic" data-roll="'+s.key+'" aria-label="Tirer ce repas">'+ICON.roll+'</button></span></div></div>';
     const n=mealNut(r);
-    return '<div class="slot'+(fresh.has(s.key)?' new':'')+'"><div class="row"><span class="when">'+lab+'</span>'+(last.includes(r.id)?'<span class="rep">déjà sorti</span>':'')+'</div><button class="nm" data-open="'+esc(r.id)+'">'+(p.rest?'Restes : ':'')+(r.fav===1?'❤️ ':'')+esc(r.name)+'</button><span class="kc">≈ '+num(n.k)+' kcal · P '+num(n.p)+' g'+(r.prep||r.cook?' · '+((+r.prep||0)+(+r.cook||0))+' min':'')+'</span><div class="row"><span class="tag t-'+(p.rest?'libre':esc(r.type))+'">'+(p.rest?'restes':esc(r.type))+'</span><span>'+ed+'<button class="ic'+(p.locked?' on':'')+'" data-lock="'+s.key+'" aria-label="'+(p.locked?'Déverrouiller':'Garder')+' ce repas">'+(p.locked?ICON.lock:ICON.open)+'</button>'+(p.locked?'<button class="ic" disabled aria-label="Repas verrouillé : déverrouille-le pour l\'effacer" title="Repas verrouillé : déverrouille-le pour l\'effacer">'+ICON.erase+'</button>':'<button class="ic" data-erase="'+s.key+'" aria-label="Effacer ce repas" title="Effacer ce repas">'+ICON.erase+'</button>')+'<button class="ic" data-roll="'+s.key+'" aria-label="Retirer ce repas">'+ICON.roll+'</button></span></div></div>';
+    return '<div class="slot'+(fresh.has(s.key)?' new':'')+'"><div class="row"><span class="when">'+lab+'</span>'+(last.includes(r.id)?'<span class="rep">déjà sorti</span>':'')+'</div><button class="nm" data-open="'+esc(r.id)+'">'+(p.rest?'Restes : ':'')+(r.fav===1?'❤️ ':'')+esc(r.name)+'</button><span class="kc">≈ '+num(n.k)+' kcal · P '+num(n.p)+' g'+(r.prep||r.cook?' · '+((+r.prep||0)+(+r.cook||0))+' min':'')+'</span><div class="row"><span class="tag t-'+(p.rest?'libre':esc(r.type))+'">'+(p.rest?'restes':esc(r.type))+'</span><span>'+ed+'<button class="ic'+(p.locked?' on':'')+'" data-lock="'+s.key+'" aria-label="'+(p.locked?'Déverrouiller':'Garder')+' ce repas">'+(p.locked?ICON.lock:ICON.open)+'</button>'+(p.locked?'<button class="ic dis" aria-disabled="true" data-tip="Déverrouille d\'abord le repas" aria-label="Repas verrouillé : déverrouille-le pour l\'effacer">'+ICON.erase+'</button>':'<button class="ic" data-erase="'+s.key+'" aria-label="Effacer ce repas" title="Effacer ce repas">'+ICON.erase+'</button>')+'<button class="ic" data-roll="'+s.key+'" aria-label="Retirer ce repas">'+ICON.roll+'</button></span></div></div>';
   }).join('')+'</div>'}).join('');
 }
 function fmt(q,u){
@@ -770,6 +770,7 @@ $('cal').addEventListener('click',pickW);$('cal').addEventListener('keydown',e=>
 $('week').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
   if(b.dataset.lock){const p=W().plan[b.dataset.lock];if(p){p.locked=!p.locked;save();renderWeek()}}
   if(b.dataset.roll){const p=W().plan[b.dataset.roll];if(p&&p.txt)delete W().plan[b.dataset.roll];fill(b.dataset.roll)}
+  if(b.dataset.tip){b.classList.add('tip');clearTimeout(b._t);b._t=setTimeout(()=>b.classList.remove('tip'),1800)}
   if(b.dataset.erase&&!(W().plan[b.dataset.erase]||{}).locked){delete W().plan[b.dataset.erase];save();render()}
   if(b.dataset.edit)openEd(b.dataset.edit);
   if(b.dataset.open)openRv(b.dataset.open);
