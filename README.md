@@ -69,4 +69,4 @@ Une ligne par ingrédient, quantités pour 1 adulte. Laisser « Plat » vide pou
 
 Les valeurs nutritionnelles fournies sont des ordres de grandeur, pas des données de référence.
 - Tour de cuisine : le prénom de qui cuisine s'affiche sur chaque jour ; la rotation change chaque mardi (David à partir du mardi 1er décembre 2026, puis Alex, etc.). Bouton « Inverser » dans les paramètres.
-- Gomme sur chaque repas (midi ou soir) pour l'effacer individuellement ; le créneau repasse à « À tirer ».
+- Gomme sur chaque repas (midi ou soir) pour l'effacer individuellement ; le créneau repasse à « À tirer ». Un repas verrouillé est protégé : il faut le déverrouiller pour l'effacer.
