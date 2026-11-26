@@ -280,7 +280,7 @@ textarea{min-height:100px;resize:vertical}
       <div class="field"><span>Enfants</span><input type="number" id="kids" min="0" max="10"></div>
       <div class="field"><span>Portion enfant <span class="hint">(1 = portion adulte)</span></span><input type="number" id="kidf" min="0.2" max="1" step="0.1"></div>
       <div class="field"><span>Midis en semaine à la maison toute l'année <span class="hint">(sinon cantine)</span></span><input type="checkbox" id="wklunch"></div>
-      <div class="field"><span>Midis à la maison pendant les vacances scolaires (zone C, Paris) et les jours fériés</span><input type="checkbox" id="hol"></div>
+      <p class="hint" style="margin:6px 0">Pendant les vacances scolaires (zone C, Paris) et les jours fériés, les midis sont toujours prévus à la maison.</p>
       <div class="field"><span>Mercredi midi à la maison</span><input type="checkbox" id="wed"></div>
       <div class="field"><span>Tour de cuisine (change chaque mardi)<br><small class="hint" id="cookh" style="margin:0"></small></span><button class="btn" type="button" id="cooksw">Inverser</button></div>
       <div class="field" style="flex-wrap:wrap;gap:8px"><span>Privilégier les recettes de qui cuisine<br><small class="hint" style="margin:0">Le tirage reste au hasard parmi toutes les recettes</small></span><div class="seg" id="cookw" role="group" aria-label="Privilégier les recettes de qui cuisine"><button type="button" data-cw="0">Non</button><button type="button" data-cw="1">Un peu</button><button type="button" data-cw="2">Fortement</button></div></div>
@@ -494,7 +494,7 @@ function prevIds(){const p=weeks[wkey(addDays(cur,-7))];return p?Object.values(p
 function hasPlan(m){const w=weeks[wkey(m)];return w&&Object.keys(w.plan).length>0}
 
 function slots(){const out=[],ov=(weeks[wkey(cur)]||{}).on||{};DAYS.forEach((d,i)=>{const info=dayInfo(addDays(cur,i));['midi','soir'].forEach(w=>{
-  const key=i+'-'+w,base=w==='soir'||i>=5||S.wklunch||(S.wed&&i===2)||(S.hol&&!!info);
+  const key=i+'-'+w,base=w==='soir'||i>=5||S.wklunch||(S.wed&&i===2)||!!info;
   out.push({key,day:i,when:w,base,on:key in ov?ov[key]:base})})});return out}
 const valid=p=>p&&(p.txt||byId(p.id));
 function factor(){return S.adults+S.kids*S.kidf}
@@ -694,7 +694,7 @@ function renderCal(){
   $('cal').innerHTML='<tr><th>Sem.</th>'+['L','M','M','J','V','S','D'].map(d=>'<th>'+d+'</th>').join('')+'</tr>'+rows;
 }
 function renderSide(){
-  $('adults').value=S.adults;$('kids').value=S.kids;$('kidf').value=S.kidf;$('wklunch').checked=S.wklunch;$('hol').checked=S.hol;$('wed').checked=S.wed;document.querySelectorAll('#cookw [data-cw]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.cw===S.cookw)));{const t=new Date(TODAY),c=cookOf(t),dw=(t.getDay()+5)%7,nx=addDays(t,(7-dw)%7||7);$('cookh').textContent=c?'Cette semaine : '+c+' · dès le mardi '+nx.getDate()+' '+MABR[nx.getMonth()]+' : '+cookOf(nx):''}$('rep').value=S.rep;$('repv').textContent=S.rep;$('vary').checked=S.vary;$('minF').value=S.minF;$('minV').value=S.minV;$('maxT').value=String(S.maxT);$('season').checked=S.season;$('rest').checked=S.rest;$('twice').checked=S.twice;
+  $('adults').value=S.adults;$('kids').value=S.kids;$('kidf').value=S.kidf;$('wklunch').checked=S.wklunch;$('wed').checked=S.wed;document.querySelectorAll('#cookw [data-cw]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.cw===S.cookw)));{const t=new Date(TODAY),c=cookOf(t),dw=(t.getDay()+5)%7,nx=addDays(t,(7-dw)%7||7);$('cookh').textContent=c?'Cette semaine : '+c+' · dès le mardi '+nx.getDate()+' '+MABR[nx.getMonth()]+' : '+cookOf(nx):''}$('rep').value=S.rep;$('repv').textContent=S.rep;$('vary').checked=S.vary;$('minF').value=S.minF;$('minV').value=S.minV;$('maxT').value=String(S.maxT);$('season').checked=S.season;$('rest').checked=S.rest;$('twice').checked=S.twice;
   const pm=addDays(cur,-7);$('lasttitle').textContent='Semaine précédente (S'+iso(pm).w+')';
   const ids=[...new Set(prevIds())];
   $('last').innerHTML=ids.length?ids.map(byId).filter(Boolean).map(r=>'<button type="button" class="chip" data-open="'+esc(r.id)+'" style="padding-right:12px;cursor:pointer" title="Voir la fiche">'+esc(r.name)+'</button>').join(''):'<span class="hint">Pas de menus tirés la semaine précédente.</span>';
@@ -932,7 +932,6 @@ $('copy').addEventListener('click',async()=>{const t='Courses semaine '+iso(cur)
 [['adults',v=>S.adults=Math.max(0,parseInt(v)||0)],['kids',v=>S.kids=Math.max(0,parseInt(v)||0)],['kidf',v=>S.kidf=Math.min(1,Math.max(.2,parseFloat(v)||.6))],['rep',v=>S.rep=parseInt(v)]]
   .forEach(([id,fn])=>$(id).addEventListener('input',e=>{fn(e.target.value);save();renderShop();renderBud();renderHead();$('repv').textContent=S.rep}));
 $('wklunch').addEventListener('change',e=>{S.wklunch=e.target.checked;save();render()});
-$('hol').addEventListener('change',e=>{S.hol=e.target.checked;save();render()});
 $('wed').addEventListener('change',e=>{S.wed=e.target.checked;save();render()});
 $('cookw').addEventListener('click',e=>{const b=e.target.closest('[data-cw]');if(b){S.cookw=+b.dataset.cw;save();renderSide()}});
 $('cooksw').addEventListener('click',()=>{const c=HOUSE.cook||{from:'2026-12-01',first:0};HOUSE.cook={from:c.from,first:(c.first+1)%Math.max(1,HOUSE.members.length)};save();render()});
