@@ -612,13 +612,16 @@ function costQ(q,u,P){if(!P)return null;const [e,b]=P;if((u==='g'&&b==='kg')||(u
 function parseQ(t){const m=/^\s*([\d.,]+)\s*(kg|g|l|cl|ml)?\b/i.exec(t||'');if(!m)return null;let q=parseFloat(m[1].replace(',','.')),u=(m[2]||'').toLowerCase();if(u==='kg'){q*=1000;u='g'}if(u==='l'){q*=1000;u='ml'}if(u==='cl'){q*=10;u='ml'}return {q,u:u||'pièce'}}
 // Conditionnements Monoprix (relevé du 26/11/2026) : [taille, unité g|ml|u, prix du paquet]
 const PACK={"potiron":[1000,"g",3.49],"haricots blancs":[500,"g",1.55],"vermicelles":[500,"g",2.09],"pois cassés":[500,"g",3.14],"chou vert":[500,"g",2.29],"navet":[500,"g",2.99],"spaghetti":[1000,"g",1.49],"pâtes":[1000,"g",1.65],"riz":[1000,"g",1.99],"riz arborio":[500,"g",3.35],"bœuf haché":[350,"g",6.49],"sauce tomate":[400,"ml",1.99],"carottes":[1500,"g",3.09],"ail":[10,"u",1.16,"tête"],"oignon":[10,"u",1.99,"filet 1 kg"],"huile d'olive":[1000,"ml",10.09],"parmesan":[60,"g",1.39],"cuisse de poulet":[2,"u",2.43],"pommes de terre":[1500,"g",1.49],"salade":[1,"u",1.69],"pavé de saumon":[2,"u",6.99],"citron":[4,"u",2.49],"brocoli":[500,"g",1.99],"beurre":[125,"g",1.85],"jambon":[4,"u",2.99],"crème fraîche":[500,"ml",2.15],"emmental râpé":[500,"g",4.39],"emmental":[500,"g",4.75],"lait":[6000,"ml",6.49,"pack 6 × 1 l"],"œuf":[12,"u",3.55],"pâte brisée":[1,"u",0.75],"lardons":[200,"g",1.69],"haricots rouges":[500,"g",1.19],"maïs":[285,"g",0.79],"tomates concassées":[400,"g",1.19],"poivron":[3,"u",3.69],"pain de mie":[22,"u",1.09,"paquet 550 g"],"soupe de légumes":[1000,"ml",2.15],"poisson pané":[15,"u",3.19],"lentilles corail":[500,"g",2.78],"lait de coco":[200,"ml",1.09],"épinards":[600,"g",3.09],"tortillas":[8,"u",3.19],"blanc de poulet":[560,"g",9.34],"avocat":[4,"u",3.99],"ratatouille":[375,"g",0.89],"pain":[340,"g",1.65],"pâte à pizza":[1,"u",1.15],"mozzarella":[1,"u",1.05],"cube de bouillon":[18,"u",2.75,"boîte de 18"],"champignons":[230,"g",1.35],"dos de cabillaud":[3,"u",11.99],"courgettes":[1000,"g",2.49],"galettes de sarrasin":[6,"u",2.19],"légumes pour soupe":[1000,"g",3.79],"fromage frais":[240,"g",2.69],"steak haché":[2,"u",4.85],"frites":[810,"g",3.49],"veau":[400,"g",8.0],"bœuf à braiser":[400,"g",5.68],"vin rouge":[250,"ml",1.9],"vin blanc":[750,"ml",3.09],"crozets":[500,"g",4.19],"reblochon":[250,"g",5.39],"chipolatas":[6,"u",4.45],"escalope de dinde":[2,"u",4.34],"cordon bleu":[2,"u",2.09],"haricots verts":[1000,"g",2.45],"feuilles de lasagne":[500,"g",1.59],"farine":[1000,"g",1.09],"merguez":[6,"u",5.09],"semoule":[1000,"g",2.35],"pois chiches":[530,"g",1.55],"pain à burger":[4,"u",1.65],"cheddar":[12,"u",1.85],"saucisses fumées":[3,"u",8.65],"lentilles vertes":[500,"g",1.79],"sauce soja":[125,"ml",1.65],"sucre":[750,"g",1.65],"rôti de porc":[400,"g",6.0],"petits pois carottes":[530,"g",1.55],"concombre":[1,"u",1.99],"thon":[280,"g",4.95],"dos de colin":[2,"u",4.29],"moules":[1400,"g",8.99],"saumon fumé":[210,"g",7.95],"poireaux":[500,"g",3.99],"crevettes":[100,"g",1.99],"nouilles chinoises":[250,"g",1.55],"pesto":[190,"g",1.99],"tomates cerises":[400,"g",1.89],"aubergine":[500,"g",2.29],"gnocchis":[400,"g",1.55],"chou-fleur":[1000,"g",2.55],"petits pois":[1000,"g",1.79],"fruits":[1500,"g",3.99]};
-function packCost(n,q,u,up){const k=PACK[lc(n)]||PACK[pk(n)];if(!k||!(q>0))return null;let [sz,pu,pp,pl]=k;
-  const w=(NUT[lc(n)]||NUT[pk(n)]||[])[4],piece=x=>!['g','ml'].includes(x);
+function packInfo(n){const P=HOUSE.prod||{},x=P[lc(n)]||P[pk(n)];if(x&&x.sz>0&&x.pp!=null)return [x.sz,x.pu||'g',x.pp,x.pl||'',true];const k=PACK[lc(n)]||PACK[pk(n)];return k?[k[0],k[1],k[2],k[3]||'',false]:null}
+function packLab(sz,pu,pl){return pl?pl:pu==='u'?(sz>1?'lot de '+sz:'1 pièce'):(sz>=1000?num(sz/1000,1)+(pu==='g'?' kg':' l'):num(sz,1)+' '+pu)}
+function packCost(n,q,u,up){const k=packInfo(n);if(!k||!(q>0))return null;let [sz,pu,pp,pl,mine]=k;if(mine)up=null;
+  const w=u==='gousse'?5:(NUT[lc(n)]||NUT[pk(n)]||[])[4],piece=x=>!['g','ml'].includes(x);
   if(pu==='u'&&u==='g'){if(!w)return null;q=q/w}else if(pu==='g'&&piece(u)){if(!w)return null;q=q*w}else if(pu==='u'?!piece(u):pu!==u)return null;
   if(up){const c=costQ(sz,pu==='u'?'pièce':pu,up);if(c==null)return null;pp=c}const nb=Math.max(1,Math.ceil(q/sz-0.02));
-  const lab=pl?pl:pu==='u'?(sz>1?'lot de '+sz:'1 pièce'):(sz>=1000?num(sz/1000,1)+(pu==='g'?' kg':' l'):sz+' '+pu);return {eur:nb*pp,pk:nb+' × '+lab}}
+  const lab=packLab(sz,pu,pl);return {eur:nb*pp,pk:nb+' × '+lab}}
 function itemCost(a){
-  if(a.src==='meal'){const r=pref(a.n);if(r&&r.user){const pu=packCost(a.n,a.q,a.u,r.p);return pu?Object.assign(pu,{user:true}):{eur:costQ(a.q,a.u,r.p),user:true}}const rc=(HOUSE.recur||[]).find(y=>pk(y.n)===pk(a.n)&&y.p==null),rq=rc&&parseQ(rc.q);if(rq&&rq.u===a.u){const t=packCost(a.n,rq.q+a.q,a.u),b=packCost(a.n,rq.q,a.u);if(t&&b){const d=t.eur-b.eur;return {eur:d,pk:d>0?'+ '+t.pk.replace(/^\d+/,m=>m-(+b.pk.match(/^\d+/)[0])):'inclus dans les courses de chaque semaine'}}}const pc=packCost(a.n,a.q,a.u);if(pc)return pc;return r?{eur:costQ(a.q,a.u,r.p),user:r.user}:{eur:null}}
+  if(a.src==='meal'){const r=pref(a.n);const pi=packInfo(a.n);if(pi&&pi[4]){const c=packCost(a.n,a.q,a.u);if(c)return Object.assign(c,{user:true})}
+  if(r&&r.user){const pu=packCost(a.n,a.q,a.u,r.p);return pu?Object.assign(pu,{user:true}):{eur:costQ(a.q,a.u,r.p),user:true}}const rc=(HOUSE.recur||[]).find(y=>pk(y.n)===pk(a.n)&&y.p==null),rq=rc&&parseQ(rc.q);if(rq&&rq.u===a.u){const t=packCost(a.n,rq.q+a.q,a.u),b=packCost(a.n,rq.q,a.u);if(t&&b){const d=t.eur-b.eur;return {eur:d,pk:d>0?'+ '+t.pk.replace(/^\d+/,m=>m-(+b.pk.match(/^\d+/)[0])):'inclus dans les courses de chaque semaine'}}}const pc=packCost(a.n,a.q,a.u);if(pc)return pc;return r?{eur:costQ(a.q,a.u,r.p),user:r.user}:{eur:null}}
   const x=a.src==='recur'?HOUSE.recur.find(y=>y.n===a.n):W().extras[a.i];if(!x)return {eur:null};
   if(x.p!=null)return {eur:x.p,user:true};
   if(a.src==='recur'){if(RECP[lc(x.n)]!=null)return {eur:RECP[lc(x.n)]};const pq=parseQ(x.q),r=pref(x.n);if(pq){const pc=packCost(x.n,pq.q,pq.u);if(pc)return pc}if(pq&&r)return {eur:costQ(pq.q,pq.u,r.p)}}
@@ -671,10 +674,10 @@ function renderProd(){
   lib.forEach(r=>r.ing.forEach(i=>{const k=lc(i[2]);if(!names.has(k))names.set(k,{n:i[2],u:i[1]})}));
   HOUSE.recur.forEach(x=>{const k=lc(x.n);if(!names.has(k))names.set(k,{n:x.n,recur:true})});
   const rows=[...names.values()].filter(x=>!q||lc(x.n).includes(q)||lc((prodOf(x.n)||{}).l||'').includes(q)).sort((a,b)=>a.n.localeCompare(b.n,'fr'));
-  $('psum').textContent=($('pdet').open?'Masquer':'Afficher')+' les '+rows.length+' produits';
+  {const P=HOUSE.prod||{},nv=rows.filter(x=>P[lc(x.n)]&&P[lc(x.n)].sz).length;$('psum').textContent=($('pdet').open?'Masquer':'Afficher')+' les '+rows.length+' produits · '+nv+' vérifié'+(nv>1?'s':'')}
   $('ptab').innerHTML='<thead><tr><th>Ingrédient</th><th>Produit</th><th style="text-align:right">Prix</th><th></th></tr></thead><tbody>'+rows.map(x=>{const pd=prodOf(x.n),pr=x.recur?null:pref(x.n),rec=x.recur?HOUSE.recur.find(y=>lc(y.n)===lc(x.n)):null;
-    const price=x.recur?(rec&&rec.p!=null?money(rec.p)+' / sem.':RECP[lc(x.n)]!=null?money(RECP[lc(x.n)])+' / sem.':'—'):pr?money(pr.p[0])+BASE[pr.p[1]].slice(1):'—';
-    return '<tr><td><b>'+esc(x.n)+'</b>'+((pd&&pd.user)||(pr&&pr.user)?' <span class="src">perso</span>':'')+'</td><td>'+(pd&&pd.u?'<a href="'+esc(pd.u)+'" target="_blank" rel="noopener">'+esc(pd.l||'Voir sur Monoprix')+' ↗</a>':pd&&pd.l?esc(pd.l):'<span class="hint">Pas de produit</span>')+'</td><td class="num">'+price+'</td><td style="text-align:right"><button class="btn" data-pe="'+esc(x.n)+'" data-rc="'+(x.recur?1:0)+'" data-u="'+esc(x.u||'')+'">Modifier</button></td></tr>'}).join('')+'</tbody>';
+    const price=x.recur?(rec&&rec.p!=null?money(rec.p)+' / sem.':RECP[lc(x.n)]!=null?money(RECP[lc(x.n)])+' / sem.':'—'):(()=>{const k=packInfo(x.n);return k?money(k[2])+'<br><small class="hint">'+esc(packLab(k[0],k[1],k[3]))+'</small>':pr?money(pr.p[0])+BASE[pr.p[1]].slice(1):'—'})();
+    return '<tr><td><b>'+esc(x.n)+'</b>'+((pd&&pd.user)||(pr&&pr.user)?' <span class="src">vérifié</span>':'')+'</td><td>'+(pd&&pd.u?'<a href="'+esc(pd.u)+'" target="_blank" rel="noopener">'+esc(pd.l||'Voir sur Monoprix')+' ↗</a>':pd&&pd.l?esc(pd.l):'<span class="hint">Pas de produit</span>')+'</td><td class="num">'+price+'</td><td style="text-align:right"><button class="btn" data-pe="'+esc(x.n)+'" data-rc="'+(x.recur?1:0)+'" data-u="'+esc(x.u||'')+'">Modifier</button></td></tr>'}).join('')+'</tbody>';
 }
 $('pdet').addEventListener('toggle',renderProd);
 $('pq').addEventListener('input',()=>{if($('pq').value)$('pdet').open=true;renderProd()});
@@ -897,27 +900,43 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('ryv').hidden)cl
 let prKey=null;
 let PRA=null;
 function openPr(key,obj){const a=obj||SHOPIDX[key];if(!a)return;PRA=a;prKey=key;const f=$('prf');
-  if(a.src==='meal'){const r=pref(a.n),d=PRICE[lc(a.n)],P=r?r.p:[ '', a.u==='g'?'kg':a.u==='ml'?'l':'u'];
-    f.innerHTML='<div class="row"><h2 id="prt" style="font-size:22px;margin:0">Prix : '+esc(a.n)+'</h2><button class="ic" type="button" data-pc="x" aria-label="Fermer">'+ICON.x+'</button></div>'+
-      '<div class="inrow" style="margin:0"><input type="text" inputmode="decimal" autocomplete="off" name="p" value="'+esc(P[0])+'" placeholder="Prix" required style="flex:1 1 120px"><select name="b" style="min-height:44px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);padding:0 8px;font-size:16px">'+Object.entries(BASE).map(([k,l])=>'<option value="'+k+'"'+(k===P[1]?' selected':'')+'>'+l+'</option>').join('')+'</select></div>'+
-      '<p class="hint" style="margin:0">'+(a.qt?'Cette semaine : '+esc(a.qt)+(a.eur!=null?' ≈ '+money(a.eur):'')+'. ':'')+(d?'Prix de référence : '+money(d[0])+BASE[d[1]].slice(1)+'.':'Pas de prix de référence pour cet article.')+' Le prix est retenu pour toutes les semaines.</p>';
+  if(a.src==='meal'){const pi=packInfo(a.n),pd=prodOf(a.n)||{l:'',u:''},m=MONO[lc(a.n)]||MONO[pk(a.n)];
+    const known=Object.keys(MONO).filter(k=>PACK[k]).map(k=>[k,MONO[k][0]]).concat(Object.entries(HOUSE.prod||{}).filter(([k,x])=>x.l&&x.sz).map(([k,x])=>['u:'+k,x.l+' (perso)'])).sort((x,y)=>x[1].localeCompare(y[1],'fr'));
+    const I='min-height:44px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);padding:0 10px;font-size:16px',L='display:grid;gap:4px;font-weight:700;font-size:14px';
+    f.innerHTML='<div class="row"><h2 id="prt" style="font-size:22px;margin:0">Produit : '+esc(a.n)+'</h2><button class="ic" type="button" data-pc="x" aria-label="Fermer">'+ICON.x+'</button></div>'+
+      '<label class="f" style="'+L+'">Choisir parmi les produits déjà connus<select name="kn" style="'+I+'"><option value="">— garder le produit actuel —</option>'+known.map(([k,l])=>'<option value="'+esc(k)+'">'+esc(l)+'</option>').join('')+'</select></label>'+
+      '<a class="btn" href="'+esc(MXURL('q:'+a.n))+'" target="_blank" rel="noopener" style="justify-self:start;display:inline-flex;align-items:center;text-decoration:none;color:inherit">Chercher « '+esc(a.n)+' » sur Monoprix ↗</a>'+
+      '<label class="f" style="'+L+'">Produit acheté<input type="text" name="pl" autocomplete="off" value="'+esc(pd.l)+'" placeholder="Ex. : Monoprix Riz basmati 1 kg"></label>'+
+      '<label class="f" style="'+L+'">Lien vers la fiche Monoprix<input type="url" name="pu" autocomplete="off" value="'+esc(pd.u)+'" placeholder="https://courses.monoprix.fr/products/…"></label>'+
+      '<div class="inrow" style="margin:0;gap:8px;align-items:end"><label class="f" style="'+L+';flex:1 1 90px">Contenance<input type="text" inputmode="decimal" name="sz" autocomplete="off" value="'+esc(pi?pi[0]:'')+'" placeholder="500" required></label>'+
+      '<label class="f" style="'+L+';flex:0 0 auto">Unité<select name="szu" style="'+I+'"><option value="g"'+(pi&&pi[1]==='g'?' selected':'')+'>g</option><option value="kg">kg</option><option value="ml"'+(pi&&pi[1]==='ml'?' selected':'')+'>ml</option><option value="l">l</option><option value="u"'+(pi&&pi[1]==='u'?' selected':(!pi&&!['g','ml'].includes(a.u)?' selected':''))+'>pièces</option></select></label>'+
+      '<label class="f" style="'+L+';flex:1 1 90px">Prix du paquet (€)<input type="text" inputmode="decimal" name="pp" autocomplete="off" value="'+esc(pi?String(pi[2]).replace('.',','):'')+'" placeholder="4,39" required></label></div>'+
+      '<p class="hint" style="margin:0">'+(a.qt?'Cette semaine : '+esc(a.qt)+(a.eur!=null?' → '+(a.pk?esc(a.pk)+' = ':'')+money(a.eur):'')+'. ':'')+(m?'Relevé du 26/11/2026 : '+esc(m[0])+'. ':'')+'Retenu pour toutes les semaines, chez Alex aussi.</p>';
   }else{
     f.innerHTML='<div class="row"><h2 id="prt" style="font-size:22px;margin:0">Prix : '+esc(a.n)+'</h2><button class="ic" type="button" data-pc="x" aria-label="Fermer">'+ICON.x+'</button></div>'+
       '<label class="f" style="display:grid;gap:4px;font-weight:700;font-size:14px">Prix pour '+(a.qt?esc(a.qt):'cet article')+' (€)<input type="text" inputmode="decimal" autocomplete="off" name="p" value="'+esc(a.puser&&a.eur!=null?a.eur:'')+'" placeholder="'+esc(a.eur!=null?a.eur.toFixed(2):'')+'" required></label>';
   }
-  {const pd=prodOf(a.n)||{l:'',u:''},m=MONO[lc(a.n)];
+  if(a.src!=='meal'){const pd=prodOf(a.n)||{l:'',u:''},m=MONO[lc(a.n)];
   f.innerHTML+='<label class="f" style="display:grid;gap:4px;font-weight:700;font-size:14px">Produit acheté<input type="text" name="pl" autocomplete="off" value="'+esc(pd.l)+'" placeholder="Ex. : Monoprix Riz basmati 1 kg"></label>'+
     '<label class="f" style="display:grid;gap:4px;font-weight:700;font-size:14px">Lien vers la fiche Monoprix<input type="url" name="pu" autocomplete="off" value="'+esc(pd.u)+'" placeholder="https://courses.monoprix.fr/products/…"></label>'+
     (m?'<p class="hint" style="margin:0">Produit relevé le 26/11/2026 : '+esc(m[0])+'.</p>':'')}
   f.innerHTML+='<div class="actions"><button class="btn main" type="submit">Enregistrer</button>'+(a.puser||(HOUSE.prod||{})[lc(a.n)]?'<button class="btn" type="button" data-pc="reset">Revenir au produit relevé</button>':'')+'</div>';
-  $('prv').hidden=false;f.querySelector('[name=p]').focus()}
+  $('prv').hidden=false;(f.querySelector('[name=p]')||f.querySelector('[name=pl]')).focus()}
 function closePr(){$('prv').hidden=true;prKey=null}
-$('prf').addEventListener('submit',e=>{e.preventDefault();const a=PRA;if(!a)return closePr();const fd=new FormData(e.target),v=fnum(fd.get('p'));if(v==null)return;
+$('prf').addEventListener('submit',e=>{e.preventDefault();const a=PRA;if(!a)return closePr();const fd=new FormData(e.target);
+  if(a.src==='meal'){let sz=fnum(fd.get('sz')),u=fd.get('szu'),pp=fnum(fd.get('pp'));if(!(sz>0)||pp==null)return;if(u==='kg'){sz*=1000;u='g'}if(u==='l'){sz*=1000;u='ml'}
+    const pl=String(fd.get('pl')||'').trim(),pu=String(fd.get('pu')||'').trim();HOUSE.prod=HOUSE.prod||{};
+    HOUSE.prod[lc(a.n)]={l:pl,u:/^https?:\/\//i.test(pu)?pu:'',sz,pu:u,pp};delete HOUSE.prices[lc(a.n)];
+    closePr();save();renderShop();renderBud();renderProd();toast('Produit enregistré : '+(pl||a.n));return}
+  const v=fnum(fd.get('p'));if(v==null)return;
   if(a.src==='meal'){HOUSE.prices[lc(a.n)]=[v,fd.get('b')]}else{const x=a.src==='recur'?HOUSE.recur.find(y=>y.n===a.n):W().extras[a.i];if(x)x.p=v}
   {const pl=String(fd.get('pl')||'').trim(),pu=String(fd.get('pu')||'').trim(),d=prodOf(a.n),dm=MONO[lc(a.n)];HOUSE.prod=HOUSE.prod||{};
    const def=dm?{l:dm[0],u:MXURL(dm[1])}:{l:'',u:''};
    if(pl===def.l&&pu===def.u)delete HOUSE.prod[lc(a.n)];else HOUSE.prod[lc(a.n)]={l:pl,u:/^https?:\/\//i.test(pu)?pu:''}}
   closePr();save();renderShop();renderBud();renderProd();toast('Produit et prix enregistrés')});
+$('prf').addEventListener('change',e=>{if(e.target.name!=='kn'||!e.target.value)return;const f=$('prf'),v=e.target.value;let x;
+  if(v.startsWith('u:')){const o=HOUSE.prod[v.slice(2)];x={l:o.l,u:o.u,sz:o.sz,pu:o.pu,pp:o.pp}}else{const m=MONO[v],k=PACK[v];x={l:m[0],u:MXURL(m[1]),sz:k[0],pu:k[1],pp:k[2]}}
+  f.pl.value=x.l;f.pu.value=x.u;f.sz.value=String(x.sz).replace('.',',');f.szu.value=x.pu;f.pp.value=String(x.pp).replace('.',',')});
 $('prf').addEventListener('click',e=>{const b=e.target.closest('[data-pc]');if(!b)return;if(b.dataset.pc==='reset'){const a=PRA;if(HOUSE.prod)delete HOUSE.prod[lc(a.n)];
   if(a.src==='meal')delete HOUSE.prices[lc(a.n)];else{const x=a.src==='recur'?HOUSE.recur.find(y=>y.n===a.n):W().extras[a.i];if(x)delete x.p}save();renderShop();renderBud();renderProd()}closePr()});
 $('prv').addEventListener('click',e=>{if(e.target===$('prv'))closePr()});
