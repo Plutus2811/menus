@@ -151,6 +151,7 @@ textarea{min-height:100px;resize:vertical}
 .rvd .g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .rvd textarea{min-height:120px}
 @media(max-width:600px){.rvd .g3{grid-template-columns:minmax(0,1fr)}}
+.libc{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}.libc b{font-family:"Baloo 2",sans-serif;font-size:30px;line-height:1;color:var(--tomato-ink)}.libc>span:nth-child(2){font-weight:700;margin-right:6px}
 .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:12px;font-weight:700;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.show{opacity:1}
 @media(max-width:1100px){.week{grid-template-columns:repeat(4,minmax(0,1fr))}}
@@ -242,7 +243,8 @@ textarea{min-height:100px;resize:vertical}
     </section>
     </div>
     <section class="panel">
-      <h2>Bibliothèque de menus <span class="hint" id="count"></span></h2>
+      <h2 style="margin-bottom:8px">Bibliothèque de menus</h2>
+      <div class="libc" id="count" aria-live="polite"></div>
       <div class="lib" id="lib"></div>
       <form id="add">
         <div class="two">
@@ -517,7 +519,8 @@ function renderSide(){
   const pm=addDays(cur,-7);$('lasttitle').textContent='Semaine précédente (S'+iso(pm).w+')';
   const ids=[...new Set(prevIds())];
   $('last').innerHTML=ids.length?ids.map(byId).filter(Boolean).map(r=>'<span class="chip" style="padding-right:12px">'+esc(r.name)+'</span>').join(''):'<span class="hint">Pas de menus tirés la semaine précédente.</span>';
-  $('count').textContent='('+lib.length+')';
+  const ct=t=>lib.filter(r=>r.type===t).length,fv=lib.filter(r=>r.fav===1).length,av=lib.filter(r=>r.fav===-1).length;
+  $('count').innerHTML='<b>'+lib.length+'</b><span>recette'+(lib.length>1?'s':'')+'</span><span class="tag t-viande">'+ct('viande')+' viande</span><span class="tag t-poisson">'+ct('poisson')+' poisson</span><span class="tag t-végé">'+ct('végé')+' végé</span>'+(fv?'<span class="src">❤️ '+fv+'</span>':'')+(av?'<span class="src" style="color:var(--soft)">👎 '+av+'</span>':'');
   $('lib').innerHTML=lib.map(r=>'<span class="chip"><span class="t-'+esc(r.type)+'">●</span><button class="nm" data-open="'+esc(r.id)+'">'+(r.fav===1?'❤️ ':r.fav===-1?'👎 ':'')+esc(r.name)+'</button><button class="ic" data-del="'+esc(r.id)+'" aria-label="Supprimer '+esc(r.name)+'">'+ICON.x+'</button></span>').join('');
 }
 function render(){renderHead();renderWeek();renderShop();renderNut();renderCal();renderSide()}
