@@ -128,7 +128,7 @@ textarea{min-height:100px;resize:vertical}
 .dlg{background:var(--card);border-radius:18px;padding:18px;width:min(520px,100%);max-height:88vh;display:flex;flex-direction:column;gap:10px;box-shadow:0 20px 60px rgb(0 0 0/.3)}
 .dlg h2{margin:0;font-size:24px}
 .dlg input{min-height:44px;padding:8px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);font-size:16px;width:100%}
-.edl{overflow:auto;display:grid;gap:4px;min-height:120px;flex:1}
+.edl{overflow:auto;display:grid;gap:4px;min-height:120px;flex:1;align-content:start}
 .edl button{text-align:left;min-height:44px;border:0;border-radius:10px;background:var(--wash);padding:8px 12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:600}
 .edl button:hover,.edl button:focus-visible{outline:2px solid var(--tomato)}
 .slot button.nm{all:unset;cursor:pointer;font-weight:700;line-height:1.25;flex:1;display:block}
@@ -187,6 +187,9 @@ textarea{min-height:100px;resize:vertical}
 .ptab td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:middle}.ptab td.num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
 .ptab a{color:var(--ink)}.ptab .btn{min-height:36px;font-size:14px;padding:0 12px}
 @media(max-width:600px){.ptab thead{display:none}.ptab tr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 8px;padding:10px 0;border-bottom:1px solid var(--line)}.ptab td{border:0;padding:0}.ptab td:nth-child(2){grid-column:1/-1;order:3}.ptab td.num{order:2}.ptab td:last-child{grid-column:1/-1;order:4;text-align:left!important}}
+.edr{display:flex;gap:6px;align-items:stretch}
+#ov .dlg{overflow:auto}.edr>button:first-child{flex:1}
+.edl .vbtn{flex:none;background:transparent;border:1.5px solid var(--line);font-size:13px;font-weight:700;padding:0 10px}
 .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:12px;font-weight:700;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.show{opacity:1}
 @media(max-width:1100px){.week{grid-template-columns:repeat(4,minmax(0,1fr))}}
@@ -335,6 +338,14 @@ textarea{min-height:100px;resize:vertical}
     <div class="row"><h2 id="edt"></h2><button class="ic" id="edx" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
     <input type="search" id="eds" placeholder="Chercher un plat ou une catégorie (soupes, gratins…)" autocomplete="off">
     <div class="edl" id="edl"></div>
+    <button class="btn" type="button" id="ednew">＋ Saisir un nouveau plat</button>
+    <form id="ednf" hidden style="display:grid;gap:8px;margin:0;padding:12px;border-radius:12px;background:var(--wash)">
+      <p id="ednt" style="margin:0;font-weight:700"></p>
+      <div class="two"><input type="text" id="enn" placeholder="Nom du plat" required autocomplete="off"><select id="ent" style="min-height:44px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);padding:0 8px;font-size:16px"><option>viande</option><option>poisson</option><option>végé</option></select></div>
+      <textarea id="eni" placeholder="Ingrédients pour 1 adulte, un par ligne&#10;100 g pâtes&#10;1 pièce oignon&#10;50 ml crème fraîche" style="min-height:120px;padding:8px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);font-size:16px;width:100%"></textarea>
+      <p class="hint" style="margin:0">Le plat est ajouté à la bibliothèque et placé sur ce repas. Étapes, temps et catégories se complètent ensuite dans sa fiche.</p>
+      <div class="actions"><button class="btn main" type="submit">Enregistrer et placer ce repas</button><button class="btn" type="button" id="ednc">Annuler</button></div>
+    </form>
     <div class="inrow" style="margin:0"><input type="text" id="edf" placeholder="Ou un repas libre : restes, resto, pique-nique…" autocomplete="off"><button class="btn" id="edfb">Valider</button></div>
     <button class="btn" id="edrm">Pas de repas à la maison</button>
   </div>
@@ -761,13 +772,28 @@ $('week').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)
 /* ---------- choix manuel (crayon) ---------- */
 let edKey=null,edBack=null;
 function openEd(key){edKey=key;edBack=document.activeElement;const [d,w]=key.split('-');
-  $('edt').textContent=DAYS[d]+' '+addDays(cur,+d).getDate()+' · '+(w==='midi'?'midi':'soir');$('eds').value='';$('edf').value='';listEd();$('ov').hidden=false;$('eds').focus()}
+  $('edt').textContent=DAYS[d]+' '+addDays(cur,+d).getDate()+' · '+(w==='midi'?'midi':'soir');$('eds').value='';$('edf').value='';hideNew();listEd();$('ov').hidden=false;$('eds').focus()}
 function closeEd(){$('ov').hidden=true;const w=W();if(edKey&&w.on[edKey]&&!valid(w.plan[edKey])){const s=slots().find(x=>x.key===edKey);if(s&&!s.base)delete w.on[edKey]}edKey=null;save();render();if(edBack&&edBack.focus)try{edBack.focus()}catch(e){}}
 function listEd(){const q=$('eds').value.trim().toLowerCase();
-  $('edl').innerHTML=lib.filter(r=>!q||r.name.toLowerCase().includes(q)||(r.tags||[]).some(t=>t.toLowerCase().includes(q))).sort((a,b)=>a.name.localeCompare(b.name,'fr')).map(r=>'<button data-pick="'+esc(r.id)+'"><span>'+esc(r.name)+'</span><span class="tag t-'+esc(r.type)+'">'+esc(r.type)+'</span></button>').join('')||'<p class="hint">Aucun plat trouvé.</p>'}
+  $('edl').innerHTML=lib.filter(r=>!q||r.name.toLowerCase().includes(q)||(r.tags||[]).some(t=>t.toLowerCase().includes(q))).sort((a,b)=>a.name.localeCompare(b.name,'fr')).map(r=>'<div class="edr"><button data-pick="'+esc(r.id)+'"><span>'+esc(r.name)+'</span><span class="tag t-'+esc(r.type)+'">'+esc(r.type)+'</span></button><button class="vbtn" type="button" data-var="'+esc(r.id)+'" title="Créer une variante avec d\'autres ingrédients">Variante</button></div>').join('')||'<p class="hint">Aucun plat trouvé.</p>'}
 function setSlot(v){const w=W(),k=edKey;if(v===null){w.on[k]=false;delete w.plan[k]}else{w.on[k]=true;w.plan[k]=v}w.checked=[];save();edKey=null;closeEd()}
 $('eds').addEventListener('input',listEd);
-$('edl').addEventListener('click',e=>{const b=e.target.closest('[data-pick]');if(b)setSlot({id:b.dataset.pick,locked:true})});
+$('edl').addEventListener('click',e=>{const v=e.target.closest('[data-var]');if(v)return showNew(byId(v.dataset.var));const b=e.target.closest('[data-pick]');if(b)setSlot({id:b.dataset.pick,locked:true})});
+let NEWSRC=null;
+function hideNew(){$('ednf').hidden=true;$('ednew').hidden=false;NEWSRC=null}
+function showNew(src){NEWSRC=src||null;$('ednf').hidden=false;$('ednew').hidden=true;
+  $('ednt').textContent=src?'Variante de « '+src.name+' » : modifie les ingrédients':'Nouveau plat';
+  $('enn').value=src?src.name+' (variante)':($('eds').value.trim()||'');$('ent').value=src?src.type:'viande';
+  $('eni').value=src?src.ing.map(i=>num(i[0],2)+' '+i[1]+' '+i[2]).join('\n'):'';
+  $('ednf').scrollIntoView({block:'nearest'});$('enn').focus();if(src)$('enn').select()}
+$('ednew').addEventListener('click',()=>showNew(null));
+$('ednc').addEventListener('click',hideNew);
+$('ednf').addEventListener('submit',e=>{e.preventDefault();const n=$('enn').value.trim();if(!n)return;
+  const src=NEWSRC,old={};if(src)src.ing.forEach(i=>old[lc(i[2])]=i);
+  const ing=parseLines($('eni').value).map(i=>{const o=old[lc(i[2])];if(o){i[3]=o[3];if(o[4])i[4]=o[4]}return i});
+  const r={id:'u'+Date.now(),name:n,type:$('ent').value,ing};
+  if(src){['prep','cook','steps','tags','season','big','url'].forEach(k=>{if(src[k]!=null)r[k]=JSON.parse(JSON.stringify(src[k]))});r.tg=1}
+  if(ME)r.author=ME;lib.push(r);migrate();setSlot({id:r.id,locked:true});toast('« '+n+' » ajouté à la bibliothèque')});
 $('edfb').addEventListener('click',()=>{const t=$('edf').value.trim();if(t)setSlot({txt:t,locked:true})});
 $('edf').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('edfb').click()}});
 $('edrm').addEventListener('click',()=>setSlot(null));
