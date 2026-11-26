@@ -424,6 +424,23 @@ const TAGRULES=[[/soupe|velout|bouillon|gaspacho|minestrone/i,'Soupes'],[/gratin
 function autoTags(r){const t=[];TAGRULES.forEach(([re,g])=>{if(re.test(r.name)&&!t.includes(g))t.push(g)});return t}
 function allTags(){const set=new Set();lib.forEach(r=>(r.tags||[]).forEach(t=>set.add(t)));return [...set].sort((a,b)=>{const ia=TAGS.indexOf(a),ib=TAGS.indexOf(b);return (ia<0?99:ia)-(ib<0?99:ib)||a.localeCompare(b,'fr')})}
 let LIBT='all',UNAU=null;
+/* Recettes d'Alex (fichier Menus.ods) : ajoutées une seule fois au foyer */
+const NRM=x=>String(x).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/œ/g,'oe').replace(/[^a-z0-9]+/g,' ').trim().replace(/s\b/g,'');
+const ALIAS={'spaghetti bolognaise':'Pâtes sauce bolognaise','gratin de pâtes au jambon':'Gratin de pâtes','quiche lorraine et salade':'Quiche lorraine','pizza maison jambon-mozza':'Pizza','galettes complètes':'Galettes bretonnes'};
+let seeding=false;
+async function seedAlex(){
+  if(seeding||(HOUSE.seeds&&HOUSE.seeds.alex1))return;seeding=true;
+  try{const res=await fetch('alex-recettes.json',{cache:'no-store'});if(!res.ok)return;const recs=await res.json();
+    if(HOUSE.seeds&&HOUSE.seeds.alex1)return;
+    let add=0,upd=0;
+    recs.forEach(n=>{
+      const ex=lib.find(x=>x.id===n.id)||lib.find(x=>(!x.author||x.author==='Alex')&&(NRM(x.name)===NRM(n.name)||(!x.author&&ALIAS[x.name.toLowerCase()]===n.name)));
+      if(ex){if(ex.id===n.id)return;const keep={id:ex.id,fav:ex.fav};['tags','tg','m2','m3','url','season','big'].forEach(k=>delete ex[k]);Object.assign(ex,n,keep);if(keep.fav==null)delete ex.fav;upd++}
+      else if(!lib.some(x=>x.author&&x.author!=='Alex'&&NRM(x.name)===NRM(n.name))){lib.push(JSON.parse(JSON.stringify(n)));add++}});
+    HOUSE.seeds=Object.assign({},HOUSE.seeds,{alex1:1});migrate();save();render();
+    if(add+upd)toast(add+' recettes d\'Alex ajoutées'+(upd?', '+upd+' mises à jour':''));
+  }catch(e){}finally{seeding=false}
+}
 function migrate(){let ch=false;lib.forEach(r=>{if(!r.tg){r.tg=1;if(!r.tags||!r.tags.length){const t=autoTags(r);if(t.length)r.tags=t}ch=true}});lib.forEach(r=>{const m=/^d(\d+)$/.exec(r.id);const t=m&&STEPS[+m[1]];if(t&&!r.steps&&DEF[+m[1]].name===r.name){r.prep=t[0];r.cook=t[1];r.steps=t[2];ch=true}});lib.forEach(r=>{const m=/^d(\d+)$/.exec(r.id),i=m&&+m[1];if(m&&DEF[i]&&!r.m3&&DEF[i].name===r.name&&r.steps&&r.steps[0]===OLD1[i]){r.ing=JSON.parse(JSON.stringify(DEF[i].ing));r.steps=STEPS[i][2].slice();r.prep=STEPS[i][0];r.cook=STEPS[i][1];r.m3=1;ch=true}});
   lib.forEach(r=>{const m=/^d(\d+)$/.exec(r.id);if(m&&!r.m2&&DEF[+m[1]]&&DEF[+m[1]].name===r.name){Object.assign(r,EXTRA[+m[1]]||{});r.m2=1;ch=true}});return ch}
 
@@ -992,16 +1009,16 @@ function applyRemote(data){
 function connect(){
   if(unsub){unsub();unsub=null}
   ready=false;
-  if(!db||!foyer){setStat(db?'off':'err',db?'Sur cet appareil':'Synchro indisponible');renderSync();return}
+  if(!db||!foyer){setStat(db?'off':'err',db?'Sur cet appareil':'Synchro indisponible');renderSync();if(!foyer)seedAlex();return}
   setStat('off','Connexion…');renderSync();
   unsub=db.collection('foyers').doc(foyer).onSnapshot({includeMetadataChanges:true},snap=>{
     if(snap.exists&&!snap.metadata.hasPendingWrites)applyRemote(snap.data());
-    if(!snap.metadata.fromCache&&!ready){ready=true;push()}
+    if(!snap.metadata.fromCache&&!ready){ready=true;push();seedAlex()}
     setStat(snap.metadata.fromCache?'off':'ok',snap.metadata.fromCache?'Hors connexion':'Synchronisé');
   },err=>setStat('err','Accès refusé ('+err.code+')'));
 }
 function genCode(){const a='abcdefghjkmnpqrstuvwxyz23456789',r=new Uint32Array(24);crypto.getRandomValues(r);return [...r].map(x=>a[x%a.length]).join('')}
-function createFoyer(){foyer=genCode();store.set('foyer',foyer);synced={};connect();ready=true;push();toast('Foyer créé : envoie le lien d\'invitation')}
+function createFoyer(){foyer=genCode();store.set('foyer',foyer);synced={};connect();ready=true;push();seedAlex();toast('Foyer créé : envoie le lien d\'invitation')}
 async function joinFoyer(code){
   code=String(code||'').trim().toLowerCase().replace(/^.*#foyer-/,'');
   const msg=$('smsg');if(msg)msg.textContent='';
