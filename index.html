@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Menus de la semaine</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Crect width='120' height='120' rx='28' fill='%23e2412b'/%3E%3Cg fill='%23fff' opacity='.65'%3E%3Crect x='14' y='44' width='8' height='48' rx='4'/%3E%3Crect x='27' y='44' width='8' height='48' rx='4'/%3E%3Crect x='40' y='44' width='8' height='48' rx='4'/%3E%3Crect x='72' y='44' width='8' height='48' rx='4'/%3E%3Crect x='85' y='44' width='8' height='48' rx='4'/%3E%3Crect x='98' y='44' width='8' height='48' rx='4'/%3E%3C/g%3E%3Cellipse cx='60' cy='38' rx='11' ry='15' fill='%23fff'/%3E%3Crect x='56' y='48' width='8' height='44' rx='4' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="Menus">
+<meta name="theme-color" content="#e2412b">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -163,6 +167,7 @@ textarea{min-height:100px;resize:vertical}
 .bry .v{font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums;text-align:right}
 .list .pr{all:unset;cursor:pointer;font-size:13px;color:var(--soft);white-space:nowrap;padding:4px 6px;border-radius:8px;font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
 .list .pr:hover{background:var(--wash);color:var(--ink)}.list .pr:focus-visible{outline:3px solid var(--tomato-ink)}.list .pr.no{color:var(--tomato-ink)}
+.brand{display:flex;align-items:center;gap:14px}.brand .logo{width:clamp(44px,5vw,58px);height:clamp(44px,5vw,58px);flex:none;color:var(--ink)}
 .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:12px;font-weight:700;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.show{opacity:1}
 @media(max-width:1100px){.week{grid-template-columns:repeat(4,minmax(0,1fr))}}
@@ -174,7 +179,7 @@ textarea{min-height:100px;resize:vertical}
 <div class="band">
   <div class="top">
     <div>
-      <h1>Menus de la semaine</h1>
+      <div class="brand"><svg class="logo" viewBox="0 0 120 120" aria-hidden="true"><g fill="currentColor"><rect x="14" y="44" width="8" height="48" rx="4"/><rect x="27" y="44" width="8" height="48" rx="4"/><rect x="40" y="44" width="8" height="48" rx="4"/><rect x="72" y="44" width="8" height="48" rx="4"/><rect x="85" y="44" width="8" height="48" rx="4"/><rect x="98" y="44" width="8" height="48" rx="4"/></g><g fill="var(--tomato)"><ellipse cx="60" cy="38" rx="11" ry="15"/><rect x="56" y="48" width="8" height="44" rx="4"/></g></svg><h1>Menus de la semaine</h1></div>
       <p class="sub"><span id="who"></span> <span class="pill off" id="hstat">Sur cet appareil</span></p>
     </div>
     <div class="actions">
