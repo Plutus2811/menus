@@ -170,10 +170,10 @@ textarea{min-height:100px;resize:vertical}
 .brand{display:flex;align-items:center;gap:14px}.brand .logo{width:clamp(44px,5vw,58px);height:clamp(44px,5vw,58px);flex:none;color:var(--ink)}
 .h2i{width:28px;height:28px;color:var(--tomato-ink);flex:none}
 .logo .sp{transform-box:fill-box;transform-origin:50% 100%}
-.logo.play .d{animation:dayon .4s ease-out both}
-.logo.play .sp{animation:spoonpop .5s ease-out .8s both}
-@keyframes dayon{from{opacity:.15}to{opacity:1}}
-@keyframes spoonpop{0%{transform:scale(1)}45%{transform:scale(1.2)}100%{transform:scale(1)}}
+.logo.play .d{animation:dayloop 4s ease-in-out infinite backwards}
+.logo.play .sp{animation:spoonloop 4s ease-out infinite}
+@keyframes dayloop{0%{opacity:.15}8%,85%{opacity:1}95%,100%{opacity:.15}}
+@keyframes spoonloop{0%,22%{transform:scale(1)}28%{transform:scale(1.2)}36%,100%{transform:scale(1)}}
 @media (prefers-reduced-motion:reduce){.logo.play .d,.logo.play .sp{animation:none}}
 .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:12px;font-weight:700;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.show{opacity:1}
@@ -841,7 +841,10 @@ $('theme').addEventListener('click',()=>{TH=TH_NEXT[TH];store.set('theme',TH);ap
 applyTheme();
 
 /* ---------- logo animé « jour après jour » ---------- */
-function playLogo(){const l=$('logo');if(!l)return;l.classList.remove('play');void l.getBoundingClientRect();l.classList.add('play')}
+// s'anime en boucle pendant 2 minutes, puis s'arrête à la fin d'un cycle
+let logoUntil=0;
+function playLogo(){const l=$('logo');if(!l)return;logoUntil=Date.now()+120000;if(!l.classList.contains('play')){void l.getBoundingClientRect();l.classList.add('play')}}
+$('logo').querySelector('.sp').addEventListener('animationiteration',()=>{if(Date.now()>=logoUntil)$('logo').classList.remove('play')});
 $('logo').addEventListener('mouseenter',playLogo);
 $('draw').addEventListener('click',playLogo);
 playLogo();
