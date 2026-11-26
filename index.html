@@ -360,7 +360,7 @@ function renderWeek(){
   const plan=W().plan,last=prevIds(),sl=slots(),tk=TODAY.toDateString();
   $('week').innerHTML=DAYS.map((d,i)=>{const dt=addDays(cur,i),info=dayInfo(dt);return '<div class="day'+(dt.toDateString()===tk?' today':'')+'"><h3>'+d+'<small>'+dt.getDate()+' '+MABR[dt.getMonth()]+'</small>'+(info?'<br><span class="hol">'+esc(info.label)+'</span>':'')+'</h3>'+sl.filter(s=>s.day===i).map(s=>{
     const lab=s.when==='midi'?'Midi':'Soir',ed='<button class="ic" data-edit="'+s.key+'" aria-label="Choisir le repas à la main">'+ICON.pen+'</button>';
-    if(!s.on)return '<div class="slot off"><button data-add="'+s.key+'">'+(s.base?'Pas de repas · ajouter':(s.when==='midi'?'Midi : cantine · ajouter':'— · ajouter'))+'</button></div>';
+    if(!s.on)return s.base?'<div class="slot off"><button data-add="'+s.key+'">Pas de repas · ajouter</button></div>':'<div class="slot off">Cantine</div>';
     const p=plan[s.key],r=p&&p.id&&byId(p.id);
     if(p&&p.txt)return '<div class="slot"><span class="when">'+lab+'</span><span class="name">'+esc(p.txt)+'</span><span class="kc">repas libre</span><div class="row"><span class="tag t-libre">libre</span><span>'+ed+'<button class="ic" data-roll="'+s.key+'" aria-label="Tirer un plat à la place">'+ICON.roll+'</button></span></div></div>';
     if(!r)return '<div class="slot"><span class="when">'+lab+'</span><span class="name" style="color:var(--soft)">À tirer</span><div class="row"><span></span><span>'+ed+'<button class="ic" data-roll="'+s.key+'" aria-label="Tirer ce repas">'+ICON.roll+'</button></span></div></div>';
