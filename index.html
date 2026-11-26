@@ -155,7 +155,7 @@ textarea{min-height:100px;resize:vertical}
 .rvd h3{font-size:19px;margin:12px 0 6px}
 .meta{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;color:var(--soft);font-size:14px}
 .ingl{margin:0;padding:0;list-style:none}.ingl li{display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-bottom:1px solid var(--line)}
-.ingl li b{white-space:nowrap;font-variant-numeric:tabular-nums}
+.ingl li b{white-space:nowrap;font-variant-numeric:tabular-nums}.iqr{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:4px 0;border-bottom:1px solid var(--line)}.iqv{display:flex;align-items:center;gap:4px;flex:0 0 auto}.iqv input{width:72px;min-height:36px;padding:4px 8px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);font-size:16px;text-align:right}.iqv select{min-height:36px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);font-size:14px;padding:0 4px;max-width:110px}.iqv .ic{width:32px;height:32px}#rvb .iqv input{width:72px!important;flex:0 0 72px;min-width:0}#rvb .iqv select{width:auto!important;flex:0 0 auto}.iqr{flex-wrap:wrap}.iqr>span:first-child{flex:1 1 120px;min-width:0}.iqa{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:10px}
 .steps{margin:0;padding-left:22px}.steps li{padding:4px 0}
 .rvd label.f{display:grid;gap:4px;font-weight:700;font-size:14px}
 .rvd .g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
@@ -868,13 +868,16 @@ let rvId=null,rvBack=null;
 const ingLine=i=>num(i[0],2)+' '+i[1]+' '+i[2];
 function openRv(id,edit){if(!byId(id))return;rvId=id;if($('rv').hidden)rvBack=document.activeElement;$('rv').hidden=false;renderRv(edit)}
 function closeRv(){$('rv').hidden=true;rvId=null;if(rvBack&&rvBack.focus)try{rvBack.focus()}catch(e){}}
+const IUNITS=[['g','g'],['ml','ml'],['pièce','pièce / boîte'],['tranche','tranche'],['gousse','gousse']];
 function renderRv(edit){
   const r=byId(rvId),b=$('rvb');if(!r)return closeRv();
   const head='<div class="row"><h2 id="rvt">'+esc(r.name)+'</h2><button class="ic" data-rv="close" aria-label="Fermer">'+ICON.x+'</button></div>';
   if(!edit){
     const f=factor(),url=/^https?:\/\//i.test(r.url||'')?r.url:'';
     b.innerHTML=head+'<div class="meta">'+(r.author?'<span style="display:inline-flex;align-items:center;gap:6px;font-weight:700;color:var(--ink)">'+badge(r.author)+'Recette '+esc(deN(r.author))+'</span>':'<span>Recette d\'exemple</span>')+'<span class="tag t-'+esc(r.type)+'">'+esc(r.type)+'</span>'+(r.prep?'<span>Préparation '+num(+r.prep)+' min</span>':'')+(r.cook?'<span>Cuisson '+num(+r.cook)+' min</span>':'')+(r.season&&r.season!=='toute'?'<span class="hol">'+(r.season==='ete'?'Été':'Hiver')+'</span>':'')+(r.tags||[]).map(t=>'<span class="ctag">'+esc(t)+'</span>').join('')+(r.big?'<span class="hol">Grande quantité · restes</span>':'')+(url?'<a href="'+esc(url)+'" target="_blank" rel="noopener">Recette d\'origine ↗</a>':'')+'</div>'+
-      '<h3>Ingrédients <span class="hint">pour le foyer ('+num(f,1)+' portions adulte)</span></h3><ul class="ingl">'+r.ing.map(i=>'<li><span>'+esc(i[2])+'</span><b>'+fmt(i[0]*f,i[1])+'</b></li>').join('')+'</ul>'+
+      '<h3>Ingrédients <span class="hint">pour le foyer ('+num(f,1)+' portions adulte) · modifiables</span></h3><form id="iqf" class="ingl iqf">'+r.ing.map((i,k)=>{const v=i[1]==='g'||i[1]==='ml'?Math.round(i[0]*f):Math.round(i[0]*f*10)/10;
+        return '<div class="iqr"><span>'+esc(i[2])+'</span><span class="iqv"><input type="text" inputmode="decimal" autocomplete="off" data-iq="'+k+'" value="'+String(v).replace('.',',')+'" aria-label="Quantité de '+esc(i[2])+' pour le foyer"><select data-iu="'+k+'" aria-label="Unité">'+IUNITS.map(([u,l])=>'<option value="'+u+'"'+(u===i[1]?' selected':'')+'>'+l+'</option>').join('')+'</select><button type="button" class="ic" data-idel="'+k+'" aria-label="Retirer '+esc(i[2])+'">'+ICON.x+'</button></span></div>'}).join('')+
+        '<div class="iqa" hidden><button class="btn main" type="submit">Enregistrer les quantités</button><span class="hint">Pour tout le foyer : l\'appli recalcule la portion par adulte.</span></div></form>'+
       '<h3>Préparation</h3>'+(r.steps&&r.steps.length?'<ol class="steps">'+r.steps.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ol>':'<p class="hint">Pas encore d\'étapes : clique sur « Modifier » pour les ajouter.</p>')+
       '<div class="actions" style="margin-top:8px"><button class="btn'+(r.fav===1?' main':'')+'" data-rv="fav" aria-pressed="'+(r.fav===1)+'">❤️ Favori</button><button class="btn'+(r.fav===-1?' main':'')+'" data-rv="avoid" aria-pressed="'+(r.fav===-1)+'">👎 À éviter</button></div>'+
       '<p class="hint" style="margin:6px 0 0">Favori : tiré 3 fois plus souvent. À éviter : jamais tiré automatiquement (reste disponible avec le crayon).</p>'+
@@ -898,7 +901,14 @@ function renderRv(edit){
 $('rvb').addEventListener('click',e=>{const a=e.target.closest('[data-rv]');if(!a)return;const v=a.dataset.rv;if(v==='close')return closeRv();
   if(v==='fav'||v==='avoid'){const r=byId(rvId),t=v==='fav'?1:-1;r.fav=r.fav===t?0:t;save();render();renderRv(false);return}
   renderRv(v==='edit')});
-$('rvb').addEventListener('submit',e=>{e.preventDefault();const r=byId(rvId),fd=new FormData(e.target);if(!r)return;
+$('rvb').addEventListener('input',e=>{if(e.target.closest('#iqf')){const a=$('rvb').querySelector('.iqa');if(a)a.hidden=false}});
+$('rvb').addEventListener('change',e=>{if(e.target.closest('#iqf')){const a=$('rvb').querySelector('.iqa');if(a)a.hidden=false}});
+$('rvb').addEventListener('click',e=>{const d=e.target.closest('[data-idel]');if(!d)return;const row=d.closest('.iqr');row.dataset.del='1';row.style.display='none';$('rvb').querySelector('.iqa').hidden=false});
+$('rvb').addEventListener('submit',e=>{if(e.target.id==='iqf'){e.preventDefault();const r=byId(rvId);if(!r)return;const f=factor(),F=e.target;
+  const keep=[];r.ing.forEach((i,k)=>{const row=F.querySelector('[data-iq="'+k+'"]').closest('.iqr');if(row.dataset.del)return;const v=fnum(F.querySelector('[data-iq="'+k+'"]').value),u=F.querySelector('[data-iu="'+k+'"]').value;
+    if(v!=null&&v>=0){if(u!==i[1])i[1]=u;i[0]=Math.round(v/f*1000)/1000}keep.push(i)});
+  r.ing=keep;save();render();renderRv();toast('Quantités enregistrées');return}
+  e.preventDefault();const r=byId(rvId),fd=new FormData(e.target);if(!r)return;
   const old={};r.ing.forEach(i=>old[lc(i[2])]=i);
   r.name=String(fd.get('name')).trim()||r.name;r.type=fd.get('type');if(fd.get('author'))r.author=fd.get('author');else delete r.author;
   const pn=fnum(fd.get('prep')),cn=fnum(fd.get('cook'));if(pn!=null)r.prep=pn;else delete r.prep;if(cn!=null)r.cook=cn;else delete r.cook;
